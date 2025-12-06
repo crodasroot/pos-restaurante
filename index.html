@@ -358,21 +358,17 @@ display: flex; justify-content: space-around;
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            // ⭐ ESTA ES LA LÍNEA QUE DEBES MODIFICAR ⭐
+            // **CORRECCIÓN:** Usar la ruta absoluta del repositorio
             navigator.serviceWorker.register('/pos-restaurante/sw.js') 
                 .then(registration => {
                     console.log('ServiceWorker registrado con éxito:', registration.scope);
-                    // Esto verificará que la ruta registrada sea correcta:
-                    console.log('Scope registrado:', registration.scope); 
                     showStatus('PWA lista. Se puede instalar o usar sin conexión.', 4000);
                 })
                 .catch(error => {
+                    // Si falla, es por un error de sintaxis en el sw.js
                     console.error('Fallo en el registro del ServiceWorker:', error);
-                    // Opcional: showStatus('Advertencia: Funcionalidad sin conexión limitada.', 4000);
                 });
         });
-    } else {
-        console.warn('Este navegador no soporta Service Workers.');
     }
 }
 
