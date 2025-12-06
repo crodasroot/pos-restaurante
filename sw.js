@@ -1,10 +1,12 @@
 const CACHE_NAME = 'pos-offline-v1';
 const FILES_TO_CACHE = [
-  '/', // El archivo principal, que resuelve a index.html
+  '/', 
   '/index.html',
-  '/manifest.json' 
-  // ¡Ojo! Si tienes íconos o cualquier imagen (.png, .svg) 
-  // referenciada en el manifest, ¡debes añadirla aquí!
+  '/manifest.json',
+  '/sw.js',
+  '/pos-restaurante/icon-192.png',
+  '/pos-restaurante/icon-512.png',
+  // Add other assets like CSS, JS, images as needed
 ];
 
 self.addEventListener('install', (evt) => {
