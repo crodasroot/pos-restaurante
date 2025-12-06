@@ -49,12 +49,21 @@
 
         /* --- PESTAÑAS Y NAVEGACIÓN --- */
         #nav-bar {
-            display: flex; justify-content: space-around; background-color: var(--color-secondary);
-            border-top: 1px solid #333; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5);
-            position: sticky; bottom: 0; z-index: 100;
+display: flex; justify-content: space-around; 
+            background-color: var(--color-secondary);
+            border-top: 1px solid #333; 
+            box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5);
+            /* Cambios clave para fijar */
+            position: fixed; 
+            bottom: 0; 
+            left: 0;
+            width: 100%; /* Asegura que cubra todo el ancho */
+            max-width: 600px; /* Limita al ancho del contenedor principal */
+            margin: 0 auto; /* Centrar en el ancho máximo */
+            z-index: 100;
         }
         .tab-button {
-            flex: 1; padding: 10px 0; text-align: center; border: none;
+           flex: 1; padding: 10px 0; text-align: center; border: none;
             background-color: transparent; color: #888; cursor: pointer;
             transition: all 0.2s ease-in-out; font-size: 14px;
             display: flex; flex-direction: column; align-items: center;
@@ -70,6 +79,35 @@
             margin-top: 0; 
             color: var(--color-text-light); 
             font-size: 1.5em;
+        }
+        
+        /* --- VISOR DE ORDEN ACTIVA EN PESTAÑA MENÚ --- */
+        #active-order-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background-color: var(--color-secondary);
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: border-left 0.3s;
+        }
+        #active-order-display.inactive {
+             border-left: 5px solid var(--color-danger);
+             color: #aaa;
+             font-style: italic;
+        }
+        #active-order-display:not(.inactive) {
+            border-left: 5px solid var(--color-success);
+        }
+        #order-name-display { font-weight: bold; }
+        #order-total-display { 
+            font-size: 1.2em; 
+            font-weight: bold; 
+            color: var(--color-success);
         }
 
         /* --- CONTROLES Y FORMS GENERALES --- */
@@ -95,6 +133,8 @@
             text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
             cursor: pointer; transition: transform 0.15s, background-color 0.15s;
         }
+        .product-card:active { transform: scale(0.95); background-color: #333; }
+        .product-card-name { font-size: 1em; margin: 5px 0 2px 0; font-weight: bold; }
         .product-card-price { font-size: 1.2em; color: var(--color-accent); font-weight: bold; }
 
         /* --- ESTILOS DE ORDEN Y RESUMEN --- */
@@ -112,7 +152,11 @@
             background-color: var(--color-secondary); padding: 18px; border-radius: 10px; 
             margin-top: 20px; border: 1px solid #333; 
         }
-        .total-line { font-size: 1.6em; font-weight: bold; color: var(--color-success); }
+        #order-summary div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .total-line { 
+            font-size: 1.6em; font-weight: bold; color: var(--color-success); 
+            padding-top: 15px; border-top: 2px dashed #333; 
+        }
 
         /* --- BOTONES PRINCIPALES --- */
         .action-button { 
@@ -135,40 +179,31 @@
             padding: 12px; border-bottom: 1px solid #333; background-color: var(--color-secondary);
             margin-bottom: 5px; border-radius: 4px;
         }
+        .product-item-actions button {
+            background: none; border: none; cursor: pointer; color: var(--color-danger);
+            margin-left: 10px; font-size: 1.1em;
+        }
 
         /* Estilos específicos para Backup */
         #backup-section {
-            border: 1px solid #333;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: var(--color-secondary);
-            margin-bottom: 20px;
+            border: 1px solid #333; padding: 15px; border-radius: 8px;
+            background-color: var(--color-secondary); margin-bottom: 20px;
         }
         .backup-button {
-            width: 100%;
-            padding: 12px;
-            border-radius: 6px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background-color 0.2s;
+            width: 100%; padding: 12px; border-radius: 6px; font-weight: bold;
+            border: none; cursor: pointer; margin-top: 8px;
         }
-        #export-data-btn {
-            background-color: var(--color-info); /* Azul */
-            color: var(--color-text-light);
-        }
+        #export-data-btn { background-color: var(--color-info); color: var(--color-text-light); }
         #import-file-input {
-            width: 100%; 
-            margin-bottom: 10px;
-            border: 1px solid #555;
-            padding: 10px;
-            background-color: var(--color-tertiary);
+            width: 100%; margin-bottom: 10px; border: 1px solid #555;
+            padding: 10px; background-color: var(--color-tertiary);
+            /* Ocultar input file original para usar el botón de import */
+            display: none; 
         }
-        #import-data-btn {
-            background-color: var(--color-success); /* Verde */
-            color: var(--color-text-light);
-            margin-bottom: 10px;
+        #import-data-btn { 
+            background-color: var(--color-success); 
+            color: var(--color-text-light); 
+            margin-bottom: 10px; 
         }
         
         /* Mensaje de Estado (Toast) */
@@ -178,6 +213,18 @@
             border-radius: 10px; z-index: 1000; display: none; text-align: center;
             font-size: 1.1em; box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         }
+        
+        /* Estilos de Historial (Revisados) */
+        .history-list { list-style: none; padding: 0; }
+        .history-item { 
+            background-color: var(--color-secondary); padding: 15px; border-radius: 8px; 
+            margin-bottom: 12px; display: flex; justify-content: space-between; 
+            align-items: center; border-left: 5px solid var(--color-success);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .history-item-date { font-size: 0.9em; color: #aaa; margin-top: 4px;}
+        .history-item-date span { margin-right: 5px; color: var(--color-accent); }
+        .history-item-total { font-size: 1.7em; font-weight: bold; color: var(--color-success); }
     </style>
 </head>
 <body>
@@ -190,6 +237,12 @@
         
         <div id="menu-page" class="page active">
             <h2>🍽️ Menú de Productos</h2>
+            
+            <div id="active-order-display" class="inactive">
+                <span id="order-name-display">Selecciona o crea una orden</span>
+                <span id="order-total-display">Q0.00</span>
+            </div>
+
             <div id="products-grid">
                 <p id="loading-products">Cargando menú...</p>
             </div>
@@ -265,7 +318,7 @@
 
                 <h4>Importar Data (Restaurar)</h4>
                 <p style="font-size:0.9em; color:var(--color-danger); font-weight: bold;">ADVERTENCIA: Esto SOBREESCRIBIRÁ todos los datos existentes.</p>
-                <input type="file" id="import-file-input" accept=".json">
+                <input type="file" id="import-file-input" accept=".json"> 
                 <button id="import-data-btn" class="backup-button">⬆️ Importar y Restaurar Data</button>
             </div>
             
@@ -343,10 +396,15 @@
         filterHistoryBtn: document.getElementById('filter-history-btn'),
         filterTodayBtn: document.getElementById('filter-today-btn'),
         
-        // Backup (NUEVOS)
+        // Backup
         exportDataBtn: document.getElementById('export-data-btn'),
         importFileInput: document.getElementById('import-file-input'),
-        importDataBtn: document.getElementById('import-data-btn')
+        importDataBtn: document.getElementById('import-data-btn'),
+        
+        // Display de Orden Activa
+        activeOrderDisplay: document.getElementById('active-order-display'),
+        orderNameDisplay: document.getElementById('order-name-display'),
+        orderTotalDisplay: document.getElementById('order-total-display'),
     };
 
     // --- FUNCIONES DE UTILIDAD DE INTERFAZ Y FECHAS ---
@@ -361,7 +419,8 @@
     
     function showLoading(show) {
         if (show) {
-            showStatus('Procesando... 🔄', 60000); 
+            elements.statusMessage.innerHTML = 'Procesando... 🔄';
+            elements.statusMessage.style.display = 'block';
         } else {
             elements.statusMessage.style.display = 'none';
         }
@@ -468,6 +527,7 @@
             `;
             elements.productsGrid.appendChild(card);
         });
+        updateActiveOrderDisplay(); 
     }
 
     function renderAdminProducts() {
@@ -507,7 +567,6 @@
 
 
     // --- LÓGICA DE ÓRDENES ABIERTAS (Múltiples Órdenes) ---
-    // (Funciones getOrder, saveOrder, deleteOrder, etc., son las mismas que antes)
 
     async function getOrder(orderId) {
         await openDB();
@@ -563,6 +622,8 @@
         localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, orderId);
         
         await renderOrderManagement();
+        updateActiveOrderDisplay(); 
+        
         const selectedOption = elements.orderSelector.options[elements.orderSelector.selectedIndex];
         if(selectedOption) {
             showStatus(`Orden "${selectedOption.text.split('(')[0].trim()}" activada.`, 1500);
@@ -597,6 +658,7 @@
         showStatus(`${product.name} agregado a la orden.`, 1500);
         renderOrderDetails(order);
         renderOrderManagement();
+        updateActiveOrderDisplay();
     }
 
     async function updateItemQuantity(productId, change) {
@@ -616,6 +678,7 @@
         await saveOrder(order);
         renderOrderDetails(order);
         renderOrderManagement();
+        updateActiveOrderDisplay();
     }
 
     function calculateTotal(order) {
@@ -645,14 +708,15 @@
             if (activeOrderId && openOrders.some(o => o.id === activeOrderId)) {
                 elements.orderSelector.value = activeOrderId;
             } else {
-                activeOrderId = openOrders[0].id;
-                elements.orderSelector.value = activeOrderId;
-                localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, activeOrderId);
+                activeOrderId = openOrders[0] ? openOrders[0].id : null;
+                if (activeOrderId) elements.orderSelector.value = activeOrderId;
+                if (activeOrderId) localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, activeOrderId);
             }
         }
         
         const activeOrderData = activeOrderId ? await getOrder(activeOrderId) : null;
         renderOrderDetails(activeOrderData);
+        updateActiveOrderDisplay(activeOrderData);
     }
 
     function renderOrderDetails(order) {
@@ -670,20 +734,15 @@
         if (order.items.length === 0) {
             elements.emptyOrder.textContent = `La orden "${order.name}" está vacía. Agrega productos.`;
             elements.emptyOrder.style.display = 'block';
+            elements.orderSummary.style.display = 'none';
         } else {
             elements.emptyOrder.style.display = 'none';
+            elements.orderSummary.style.display = 'block';
         }
 
         elements.checkoutBtn.style.display = 'block'; 
         elements.cancelBtn.style.display = 'block';
         
-        if (order.items.length > 0) {
-            elements.orderSummary.style.display = 'block';
-        } else {
-            elements.orderSummary.style.display = 'none';
-        }
-        
-
         order.items.forEach(item => {
             const itemElement = document.createElement('div');
             itemElement.className = 'order-item';
@@ -702,13 +761,34 @@
             elements.orderList.appendChild(itemElement);
         });
 
-        // Actualizar el resumen
         const { subtotal, tax, total } = calculateTotal(order);
         elements.subtotalAmount.textContent = formatCurrency(subtotal);
         elements.taxAmount.textContent = formatCurrency(tax);
         elements.totalAmount.textContent = formatCurrency(total);
     }
     
+    /**
+     * Actualiza el visor de orden activa en la pestaña Menú.
+     */
+    async function updateActiveOrderDisplay(orderData = null) {
+        let order = orderData;
+        if (!order && activeOrderId) {
+            order = await getOrder(activeOrderId);
+        }
+
+        if (order && activeOrderId) {
+            const { total } = calculateTotal(order);
+            elements.activeOrderDisplay.classList.remove('inactive');
+            elements.orderNameDisplay.innerHTML = `Orden Activa: <strong>${order.name}</strong>`;
+            elements.orderTotalDisplay.textContent = formatCurrency(total);
+        } else {
+            elements.activeOrderDisplay.classList.add('inactive');
+            elements.orderNameDisplay.innerHTML = `⚠️ No hay orden seleccionada`;
+            elements.orderTotalDisplay.textContent = formatCurrency(0);
+        }
+    }
+
+
     // --- LÓGICA DE VENTA/HISTORIAL ---
 
     async function checkoutOrder() {
@@ -726,20 +806,20 @@
 
         showLoading(true);
         
-        const saleData = {
-            timestamp: Date.now(),
-            date: new Date().toLocaleString('es-ES'),
-            total: total,
-            details: order.items,
-            orderName: order.name 
-        };
-        
         try {
+            const saleData = {
+                timestamp: Date.now(),
+                date: new Date().toLocaleString('es-ES'),
+                total: total,
+                details: order.items,
+                orderName: order.name 
+            };
             await transaction(STORE_SALES, 'readwrite', (store) => { store.add(saleData); });
             await deleteOrder(activeOrderId);
             showStatus(`Venta de ${order.name} registrada con éxito! 🎉`, 3000);
             activeOrderId = null;
             await renderOrderManagement();
+            updateActiveOrderDisplay(); 
 
         } catch (error) {
             console.error('Checkout Error:', error);
@@ -768,7 +848,6 @@
                         
                         let include = true;
                         
-                        // Aplicar filtros solo si se proporcionan
                         if (startDateTimestamp && saleTimestamp < startDateTimestamp) {
                             include = false;
                         }
@@ -887,7 +966,12 @@
                     if (importedData[storeName]) {
                         await transaction(storeName, 'readwrite', (store) => {
                             store.clear(); // Borra todo en la store actual
-                            importedData[storeName].forEach(item => store.put(item)); // Inserta data nueva
+                            // Usar 'add' para sales si son autoIncrement, 'put' si tienen keyPath definido (como products y orders)
+                            if (storeName === STORE_SALES) {
+                                importedData[storeName].forEach(item => store.add(item)); 
+                            } else {
+                                importedData[storeName].forEach(item => store.put(item)); 
+                            }
                         });
                     }
                 }
@@ -926,6 +1010,8 @@
 
             } else if (targetPageId === 'order-page') {
                 renderOrderManagement();
+            } else if (targetPageId === 'menu-page') {
+                updateActiveOrderDisplay(); 
             } else if (targetPageId === 'admin-page') {
                 renderAdminProducts();
                 elements.productForm.reset();
@@ -946,6 +1032,7 @@
             await deleteOrder(activeOrderId);
             activeOrderId = null;
             await renderOrderManagement();
+            updateActiveOrderDisplay(); 
             showStatus('Orden cancelada y eliminada.', 1500);
         }
     });
@@ -1015,10 +1102,10 @@
         fetchHistory(startTimestamp, endTimestamp);
     });
     
-    // Eventos de Backup (NUEVOS)
+    // Eventos de Backup
     elements.exportDataBtn.addEventListener('click', exportData);
+    // Usar el botón de Importar para desencadenar el input file
     elements.importDataBtn.addEventListener('click', () => {
-        // Simular clic en el input de tipo file al presionar el botón
         elements.importFileInput.click();
     });
     elements.importFileInput.addEventListener('change', importData);
@@ -1029,6 +1116,7 @@
             await openDB();
             await fetchProducts(); 
             await renderOrderManagement(); 
+            updateActiveOrderDisplay(); 
         } catch (error) {
             showStatus(`Error crítico al iniciar DB: ${error}`, 10000);
             console.error(error);
