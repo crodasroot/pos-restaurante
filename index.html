@@ -1,169 +1,884 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>POS Restaurante — PWA Offline</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POS Móvil - Offline Avanzado (Historial Filtrable)</title>
+    <style>
+        /* --- ESTILOS CSS PARA DISEÑO MÓVIL Y ESTÉTICA --- */
+        :root {
+            --color-primary: #1e1e1e; /* Fondo Oscuro */
+            --color-secondary: #333; /* Fondo de Tarjetas */
+            --color-accent: #ff6b6b; /* Rojo/Naranja de Acento */
+            --color-text-light: #f4f4f4;
+            --color-text-dark: #1e1e1e;
+            --mobile-padding: 15px;
+        }
 
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#1f2937" />
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <link rel="stylesheet" href="/styles.css" />
+        /* Contenedor Principal de la Aplicación */
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 600px; 
+            margin: 0 auto;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Área de Contenido */
+        #content-area {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: var(--mobile-padding);
+        }
+
+        /* --- PESTAÑAS Y NAVEGACIÓN --- */
+        #nav-bar {
+            display: flex; justify-content: space-around; background-color: var(--color-secondary);
+            border-top: 1px solid #444; box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            position: sticky; bottom: 0; z-index: 100;
+        }
+        .tab-button {
+            flex: 1; padding: 10px 0; text-align: center; border: none;
+            background-color: transparent; color: #888; cursor: pointer;
+            transition: all 0.2s ease-in-out; font-size: 14px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .tab-button.active { color: var(--color-accent); }
+        .tab-button span { font-size: 20px; margin-bottom: 3px; }
+
+        .page { display: none; padding-bottom: 20px; }
+        .page.active { display: block; }
+        h2 { border-bottom: 2px solid var(--color-accent); padding-bottom: 5px; margin-top: 0; color: var(--color-text-light); }
+
+        /* --- CONTROLES DE ORDEN Y MENÚ (Mismos que antes) --- */
+        #order-controls { background-color: #444; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
+        #order-selector { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: #333; color: var(--color-text-light); }
+        #products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+        .product-card { background-color: var(--color-secondary); border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.1s; }
+        .qty-button { background-color: var(--color-accent); color: var(--color-text-light); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2em; cursor: pointer; margin: 0 5px; }
+
+        /* --- ESTILOS DE BOTÓN PRINCIPAL (GENERAL) --- */
+        .action-button { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
+        .checkout-button { background-color: #2ecc71; color: var(--color-text-light); } 
+        .cancel-button { background-color: #e74c3c; color: var(--color-text-light); } 
+        .add-order-button { background-color: #3498db; color: var(--color-text-light); } 
+        
+        /* --- ESTILOS DE HISTORIAL (MEJORADOS) --- */
+        #history-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 6px;
+        }
+
+        #history-filters .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        #history-filters input[type="date"] {
+            flex: 1;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: var(--color-text-light);
+            box-sizing: border-box;
+        }
+        
+        #filter-history-btn, #filter-today-btn {
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        #filter-history-btn {
+            background-color: #f39c12; /* Naranja para Filtrar */
+            color: var(--color-text-dark);
+        }
+        
+        #filter-today-btn {
+            background-color: #1abc9c; /* Turquesa para Hoy */
+            color: var(--color-text-light);
+            width: 100%;
+        }
+
+        .history-list { list-style: none; padding: 0; }
+        .history-item { 
+            background-color: var(--color-secondary); 
+            padding: 12px; 
+            border-radius: 6px; 
+            margin-bottom: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            border-left: 5px solid #2ecc71; /* Barra de color para destacar */
+        }
+        .history-item-details { flex-grow: 1; }
+        .history-item-date { font-size: 0.9em; color: #ccc; margin-top: 4px;}
+        .history-item-date span { margin-right: 5px; color: var(--color-accent); }
+        .history-item-total { font-size: 1.5em; font-weight: bold; color: #2ecc71; }
+    </style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-left">
-      <h1>POS 🍽️</h1>
+
+<div id="app-container">
+    
+    <div id="status-message"></div>
+
+    <div id="content-area">
+        
+        <div id="menu-page" class="page active">
+            <h2>🍔 Menú de Productos</h2>
+            <div id="products-grid">
+                <p id="loading-products">Cargando menú...</p>
+            </div>
+        </div>
+
+        <div id="order-page" class="page">
+            <h2>🛒 Gestión de Órdenes</h2>
+            
+            <div id="order-controls">
+                <select id="order-selector"></select>
+                <button id="new-order-btn" class="add-order-button" style="padding: 10px 15px; font-size: 1em;">+ Nueva Orden</button>
+            </div>
+            
+            <div id="order-list">
+                <p id="empty-order">Selecciona una orden o crea una nueva.</p>
+            </div>
+
+            <div id="order-summary" style="display: none;">
+                <div><span>Subtotal:</span> <span id="subtotal-amount">0.00</span></div>
+                <div><span>Impuestos (0%):</span> <span id="tax-amount">0.00</span></div>
+                <div class="total-line"><span>Total:</span> <span id="total-amount">0.00</span></div>
+            </div>
+
+            <button id="checkout-btn" class="action-button checkout-button" style="display: none;">✅ CERRAR Y COBRAR ORDEN</button>
+            <button id="cancel-btn" class="action-button cancel-button" style="display: none;">❌ CANCELAR ORDEN</button>
+        </div>
+
+        <div id="history-page" class="page">
+            <h2>📜 Historial de Ventas</h2>
+
+            <div id="history-filters">
+                <button id="filter-today-btn">📆 Filtrar por **HOY**</button>
+                <div class="date-inputs">
+                    <input type="date" id="date-from" title="Desde">
+                    <input type="date" id="date-to" title="Hasta">
+                </div>
+                <button id="filter-history-btn">🔍 Aplicar Rango de Fechas</button>
+            </div>
+
+            <ul id="history-list" class="history-list">
+                <p id="loading-history">Cargando historial...</p>
+            </ul>
+        </div>
+        
+        <div id="admin-page" class="page">
+            <h2>⚙️ Gestión de Productos</h2>
+            
+            <h3>➕ Agregar/Editar Producto</h3>
+            <form id="product-form" class="admin-form">
+                <input type="hidden" id="product-id">
+                <input type="text" id="product-name" placeholder="Nombre del Producto" required>
+                <input type="number" id="product-price" placeholder="Precio (Ej: 12.50)" step="0.01" min="0" required>
+                <button type="submit" id="product-submit-btn">Guardar Producto</button>
+            </form>
+            
+            <hr style="border-color:#555; margin: 20px 0;">
+
+            <h3>📋 Menú Actual</h3>
+            <div id="product-list-admin">
+                </div>
+            
+            <hr style="border-color:#555; margin: 20px 0;">
+            
+            <h3>🗑️ Limpieza de Datos</h3>
+            <button id="clear-all-data-btn" class="action-button cancel-button" style="padding: 10px; margin-top: 5px;">🚨 ELIMINAR TODOS LOS DATOS LOCALES</button>
+        </div>
+        
     </div>
-    <div class="topbar-center">
-      <button id="toggleMenuBtn" class="icon-btn" title="Menú">☰</button>
-    </div>
-    <div class="topbar-right">
-      <button id="backupBtn" class="icon-btn" title="Exportar">💾</button>
-      <button id="importBtn" class="icon-btn" title="Importar">📂</button>
-      <input id="fileInput" type="file" accept="application/json" style="display:none" />
-    </div>
-  </header>
 
-  <main class="container">
-    <!-- Panel Menú (Oculto en móvil por defecto) -->
-    <section id="menuPanel" class="panel menu-panel">
-      <h2>Menú / Platillos</h2>
-      <form id="itemForm" class="form-stack">
-        <input type="hidden" id="itemId" />
-        <div class="form-group">
-          <label for="itemName">Nombre del platillo:</label>
-          <input id="itemName" placeholder="Ej: Pizza Hawaiana" required />
-        </div>
-        <div class="form-group">
-          <label for="itemPrice">Precio:</label>
-          <input id="itemPrice" placeholder="0.00" type="number" step="0.01" required />
-        </div>
-        <div class="form-group">
-          <label for="itemType">Categoría:</label>
-          <select id="itemType">
-            <option value="platillo">🍽️ Platillo</option>
-            <option value="bebida">🥤 Bebida</option>
-            <option value="otros">📌 Otros</option>
-          </select>
-        </div>
-        <div class="form-buttons">
-          <button id="saveItemBtn" type="submit" class="btn-primary">Guardar</button>
-          <button id="clearItemBtn" type="button" class="btn-secondary">Limpiar</button>
-        </div>
-      </form>
+    <nav id="nav-bar">
+        <button class="tab-button active" data-page="menu-page">
+            <span>&#9776;</span> Menú
+        </button>
+        <button class="tab-button" data-page="order-page">
+            <span>&#128722;</span> Órdenes
+        </button>
+        <button class="tab-button" data-page="history-page">
+            <span>&#128214;</span> Historial
+        </button>
+        <button class="tab-button" data-page="admin-page">
+            <span>&#9881;</span> Admin
+        </button>
+    </nav>
 
-      <div class="items-container">
-        <div id="itemsList"></div>
-      </div>
-    </section>
+</div>
 
-    <!-- Panel Carrito (Visible siempre en móvil) -->
-    <section id="cartPanel" class="panel cart-panel">
-      <div class="orders-header">
-        <h2 style="margin:0">🛒 Órdenes</h2>
-        <button id="newOrderBtn" class="btn-primary btn-small" style="margin:0">+ Nueva</button>
-      </div>
+<script>
+    // --- CONFIGURACIÓN DE DB Y VARIABLES GLOBALES ---
+    const DB_NAME = 'POSDB';
+    const DB_VERSION = 2; 
+    const STORE_PRODUCTS = 'products';
+    const STORE_SALES = 'sales';
+    const STORE_ORDERS = 'orders'; 
+    const LOCAL_STORAGE_ACTIVE_ORDER_ID = 'activeOrderId'; 
 
-      <div id="ordersTabs" class="orders-tabs"></div>
+    let db;
+    let PRODUCTS = []; 
+    let activeOrderId = localStorage.getItem(LOCAL_STORAGE_ACTIVE_ORDER_ID) || null;
+    const TAX_RATE = 0; 
+    
+    // --- REFERENCIAS DE ELEMENTOS HTML ---
+    const elements = {
+        productsGrid: document.getElementById('products-grid'),
+        orderSelector: document.getElementById('order-selector'),
+        newOrderBtn: document.getElementById('new-order-btn'),
+        orderList: document.getElementById('order-list'),
+        orderSummary: document.getElementById('order-summary'),
+        subtotalAmount: document.getElementById('subtotal-amount'),
+        taxAmount: document.getElementById('tax-amount'),
+        totalAmount: document.getElementById('total-amount'),
+        checkoutBtn: document.getElementById('checkout-btn'),
+        cancelBtn: document.getElementById('cancel-btn'),
+        historyList: document.getElementById('history-list'),
+        emptyOrder: document.getElementById('empty-order'),
+        statusMessage: document.getElementById('status-message'),
+        loadingProducts: document.getElementById('loading-products'),
+        loadingHistory: document.getElementById('loading-history'),
+        
+        // Elementos de Administración
+        productForm: document.getElementById('product-form'),
+        productId: document.getElementById('product-id'),
+        productName: document.getElementById('product-name'),
+        productPrice: document.getElementById('product-price'),
+        productSubmitBtn: document.getElementById('product-submit-btn'),
+        productListAdmin: document.getElementById('product-list-admin'),
+        clearAllDataBtn: document.getElementById('clear-all-data-btn'),
 
-      <div id="cartList" class="cart-list"></div>
-      
-      <div class="cart-summary">
-        <div class="summary-row">
-          <span>Items:</span>
-          <strong id="cartCount">0</strong>
-        </div>
-        <div class="summary-row total">
-          <span>Total Orden:</span>
-          <strong id="cartTotal">Q 0.00</strong>
-        </div>
-      </div>
+        // Elementos de Historial (NUEVOS)
+        dateFrom: document.getElementById('date-from'),
+        dateTo: document.getElementById('date-to'),
+        filterHistoryBtn: document.getElementById('filter-history-btn'),
+        filterTodayBtn: document.getElementById('filter-today-btn')
+    };
 
-      <div class="cart-buttons">
-        <button id="clearCartBtn" class="btn-secondary btn-full">Vaciar orden</button>
-        <button id="checkoutBtn" class="btn-primary btn-full btn-large">Cobrar esta orden</button>
-      </div>
-    </section>
+    // --- FUNCIONES DE UTILIDAD DE INTERFAZ Y FECHAS ---
 
-    <!-- Panel Historial (Oculto por defecto) -->
-    <section id="historyPanel" class="panel history-panel">
-      <h2>📋 Historial de Ventas</h2>
-      <div class="filter-buttons">
-        <button class="filter-btn active" data-filter="day">Hoy</button>
-        <button class="filter-btn" data-filter="week">Semana</button>
-        <button class="filter-btn" data-filter="month">Mes</button>
-        <button class="filter-btn" data-filter="year">Año</button>
-      </div>
-      <div class="date-range-filter">
-        <div class="date-input-group">
-          <label for="dateFrom">Desde:</label>
-          <input type="date" id="dateFrom" class="date-input" />
-        </div>
-        <div class="date-input-group">
-          <label for="dateTo">Hasta:</label>
-          <input type="date" id="dateTo" class="date-input" />
-        </div>
-      </div>
-      <div id="salesList"></div>
-    </section>
-  </main>
-
-  <!-- Navegación inferior -->
-  <nav class="bottom-nav">
-    <button class="nav-btn" id="nav-menu" title="Menú">🍽️</button>
-    <button class="nav-btn" id="nav-cart" title="Carrito">🛒</button>
-    <button class="nav-btn active" id="nav-history" title="Historial">📋</button>
-  </nav>
-
-  <!-- Modal Cobro -->
-  <div id="checkoutModal" class="modal hidden">
-    <div class="modal-content modal-checkout">
-      <button class="modal-close" id="closeModalBtn">✕</button>
-      <h3>💳 Cobrar Orden #<span id="checkoutOrderId">0</span></h3>
-      
-      <div class="checkout-items-container">
-        <h4>Artículos:</h4>
-        <div id="checkoutItemsList" class="checkout-items-list"></div>
-      </div>
-
-      <div class="checkout-summary">
-        <div class="checkout-row">
-          <span>Subtotal:</span>
-          <strong id="checkoutSubtotal">Q0.00</strong>
-        </div>
-        <div class="checkout-row total">
-          <span>Total a cobrar:</span>
-          <strong id="checkoutTotal">Q0.00</strong>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="paidAmount">Recibido:</label>
-        <input id="paidAmount" type="number" step="0.01" placeholder="0.00" inputmode="decimal" />
-      </div>
-
-      <div class="checkout-change">
-        <span>Cambio:</span>
-        <strong id="changeDue">Q0.00</strong>
-      </div>
-
-      <div class="modal-buttons">
-        <button id="confirmPayBtn" class="btn-primary btn-full">✓ Confirmar Pago</button>
-        <button id="cancelPayBtn" class="btn-secondary btn-full">✕ Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="/db.js"></script>
-  <script src="/app.js"></script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    function showStatus(message, duration = 3000) {
+        elements.statusMessage.innerHTML = message;
+        elements.statusMessage.style.display = 'block';
+        setTimeout(() => {
+            elements.statusMessage.style.display = 'none';
+        }, duration);
     }
-  </script>
+    
+    function showLoading(show) {
+        if (show) {
+            showStatus('Procesando... 🔄', 60000); 
+        } else {
+            elements.statusMessage.style.display = 'none';
+        }
+    }
+
+    /**
+     * Devuelve el timestamp de inicio del día (medianoche).
+     * @param {Date} date 
+     * @returns {number}
+     */
+    function startOfDay(date) {
+        const d = new Date(date);
+        d.setHours(0, 0, 0, 0);
+        return d.getTime();
+    }
+
+    /**
+     * Devuelve el timestamp del final del día (un milisegundo antes de la medianoche siguiente).
+     * @param {Date} date 
+     * @returns {number}
+     */
+    function endOfDay(date) {
+        const d = new Date(date);
+        d.setHours(23, 59, 59, 999);
+        return d.getTime();
+    }
+    
+    // --- MANEJO DE INDEXEDDB (Mismos que antes) ---
+
+    function openDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+            request.onerror = (event) => { reject('Error al abrir IndexedDB'); };
+            request.onsuccess = (event) => { db = event.target.result; resolve(db); };
+            request.onupgradeneeded = (event) => {
+                db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_PRODUCTS)) { db.createObjectStore(STORE_PRODUCTS, { keyPath: 'id' }); }
+                if (!db.objectStoreNames.contains(STORE_SALES)) { db.createObjectStore(STORE_SALES, { keyPath: 'id', autoIncrement: true }); }
+                if (!db.objectStoreNames.contains(STORE_ORDERS)) { db.createObjectStore(STORE_ORDERS, { keyPath: 'id' }); }
+            };
+        });
+    }
+
+    function transaction(storeName, mode, callback) {
+        return new Promise(async (resolve, reject) => {
+            if (!db) await openDB(); 
+            const tx = db.transaction(storeName, mode);
+            const store = tx.objectStore(storeName);
+            tx.oncomplete = () => resolve();
+            tx.onerror = (event) => reject(event.target.error);
+            callback(store, resolve, reject);
+        });
+    }
+
+    // --- LÓGICA DE PRODUCTOS (CRUD) (Misma que antes) ---
+    
+    async function getAllProductsFromDB() {
+        await openDB();
+        let products = [];
+        await transaction(STORE_PRODUCTS, 'readonly', (store, resolve) => {
+            const request = store.getAll();
+            request.onsuccess = (event) => { products = event.target.result; resolve(); };
+        });
+        return products;
+    }
+    
+    async function saveProduct(product) {
+        await transaction(STORE_PRODUCTS, 'readwrite', (store) => { store.put(product); });
+        PRODUCTS = await getAllProductsFromDB(); 
+        renderProducts();
+        renderAdminProducts();
+    }
+
+    async function deleteProduct(productId) {
+        if (!confirm('¿Estás seguro de ELIMINAR este producto?')) return;
+        await transaction(STORE_PRODUCTS, 'readwrite', (store) => { store.delete(productId); });
+        showStatus('Producto eliminado.', 2000);
+        PRODUCTS = await getAllProductsFromDB();
+        renderProducts();
+        renderAdminProducts();
+    }
+    
+    async function fetchProducts() {
+        elements.loadingProducts.style.display = 'block';
+        PRODUCTS = await getAllProductsFromDB();
+        if (PRODUCTS.length === 0) {
+            elements.loadingProducts.textContent = 'Menú vacío. Agrega productos desde la pestaña "Admin".';
+        } else {
+            elements.loadingProducts.style.display = 'none';
+        }
+        renderProducts();
+        renderAdminProducts(); 
+    }
+
+    function renderProducts() {
+        elements.productsGrid.innerHTML = '';
+        PRODUCTS.forEach(product => {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.setAttribute('onclick', `addToOrder('${product.id}')`);
+            card.innerHTML = `
+                <div class="product-card-name">${product.name}</div>
+                <div class="product-card-price">$${parseFloat(product.price).toFixed(2)}</div>
+            `;
+            elements.productsGrid.appendChild(card);
+        });
+    }
+
+    function renderAdminProducts() {
+        elements.productListAdmin.innerHTML = '';
+        if (PRODUCTS.length === 0) {
+            elements.productListAdmin.innerHTML = '<p>No hay productos en el menú.</p>';
+            return;
+        }
+
+        PRODUCTS.forEach(product => {
+            const row = document.createElement('div');
+            row.className = 'product-item-row';
+            row.innerHTML = `
+                <div class="product-item-info">
+                    <strong>${product.name}</strong> ($${parseFloat(product.price).toFixed(2)})
+                </div>
+                <div class="product-item-actions">
+                    <button onclick="editProduct('${product.id}')" title="Editar">&#9998;</button>
+                    <button onclick="deleteProduct('${product.id}')" title="Borrar">&#10006;</button>
+                </div>
+            `;
+            elements.productListAdmin.appendChild(row);
+        });
+    }
+
+    function editProduct(productId) {
+        const product = PRODUCTS.find(p => p.id === productId);
+        if (product) {
+            elements.productId.value = product.id;
+            elements.productName.value = product.name;
+            elements.productPrice.value = parseFloat(product.price).toFixed(2);
+            elements.productSubmitBtn.textContent = 'Guardar Cambios';
+            showStatus(`Editando: ${product.name}`, 1500);
+            elements.productForm.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+
+    // --- LÓGICA DE ÓRDENES ABIERTAS (Múltiples Órdenes) (Misma que antes) ---
+
+    async function getOrder(orderId) {
+        await openDB();
+        return new Promise((resolve, reject) => {
+            transaction(STORE_ORDERS, 'readonly', (store) => {
+                const request = store.get(orderId);
+                request.onsuccess = (event) => resolve(event.target.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        });
+    }
+
+    async function saveOrder(order) {
+        await transaction(STORE_ORDERS, 'readwrite', (store) => { store.put(order); });
+    }
+
+    async function deleteOrder(orderId) {
+        await transaction(STORE_ORDERS, 'readwrite', (store) => { store.delete(orderId); });
+    }
+
+    async function getAllOpenOrders() {
+        await openDB();
+        let orders = [];
+        await transaction(STORE_ORDERS, 'readonly', (store, resolve) => {
+            const request = store.getAll();
+            request.onsuccess = (event) => { orders = event.target.result; resolve(); };
+        });
+        return orders;
+    }
+
+    async function createNewOrder() {
+        const newOrderId = 'ORDER_' + Date.now();
+        let orderName = prompt("Ingresa el nombre de la nueva orden (Ej: Mesa 5, Cliente A):", `Orden ${newOrderId.slice(-4)}`);
+        
+        if (!orderName) return;
+
+        const newOrder = {
+            id: newOrderId,
+            name: orderName,
+            items: [],
+            timestamp: Date.now()
+        };
+        
+        await saveOrder(newOrder);
+        setActiveOrder(newOrderId);
+    }
+    
+    async function setActiveOrder(orderId) {
+        activeOrderId = orderId;
+        localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, orderId);
+        
+        await renderOrderManagement();
+        // El selector ya está renderizado con las opciones correctas
+        const selectedOption = elements.orderSelector.options[elements.orderSelector.selectedIndex];
+        if(selectedOption) {
+            showStatus(`Orden "${selectedOption.text.split('(')[0].trim()}" activada.`, 1500);
+        } else {
+            showStatus('Orden activada.', 1500);
+        }
+    }
+
+    async function addToOrder(productId) {
+        if (!activeOrderId) {
+            showStatus('Primero crea o selecciona una orden activa en la pestaña Órdenes.', 2500);
+            return;
+        }
+
+        const product = PRODUCTS.find(p => p.id === productId);
+        let order = await getOrder(activeOrderId);
+        
+        const existingItemIndex = order.items.findIndex(item => item.id === productId);
+
+        if (existingItemIndex > -1) {
+            order.items[existingItemIndex].qty++;
+        } else {
+            order.items.push({ 
+                id: product.id,
+                name: product.name,
+                price: parseFloat(product.price), 
+                qty: 1 
+            });
+        }
+        
+        await saveOrder(order);
+        showStatus(`${product.name} agregado a la orden.`, 1500);
+        renderOrderDetails(order);
+        renderOrderManagement(); // Actualizar el total en el selector
+    }
+
+    async function updateItemQuantity(productId, change) {
+        if (!activeOrderId) return;
+
+        let order = await getOrder(activeOrderId);
+        const itemIndex = order.items.findIndex(item => item.id === productId);
+
+        if (itemIndex > -1) {
+            order.items[itemIndex].qty += change;
+            
+            if (order.items[itemIndex].qty <= 0) {
+                order.items.splice(itemIndex, 1);
+            }
+        }
+        
+        await saveOrder(order);
+        renderOrderDetails(order);
+        renderOrderManagement(); // Actualizar el total en el selector
+    }
+
+    function calculateTotal(order) {
+        const subtotal = order.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const tax = subtotal * TAX_RATE;
+        const total = subtotal + tax;
+        return { subtotal, tax, total };
+    }
+
+    async function renderOrderManagement() {
+        const openOrders = await getAllOpenOrders();
+        elements.orderSelector.innerHTML = '';
+        
+        if (openOrders.length === 0) {
+            elements.orderSelector.innerHTML = '<option value="">-- No hay órdenes abiertas --</option>';
+            activeOrderId = null;
+            localStorage.removeItem(LOCAL_STORAGE_ACTIVE_ORDER_ID);
+        } else {
+            openOrders.forEach(order => {
+                const option = document.createElement('option');
+                option.value = order.id;
+                const { total } = calculateTotal(order);
+                option.textContent = `${order.name} ($${total.toFixed(2)})`;
+                elements.orderSelector.appendChild(option);
+            });
+
+            if (activeOrderId && openOrders.some(o => o.id === activeOrderId)) {
+                elements.orderSelector.value = activeOrderId;
+            } else {
+                activeOrderId = openOrders[0].id;
+                elements.orderSelector.value = activeOrderId;
+                localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, activeOrderId);
+            }
+        }
+        
+        const activeOrderData = activeOrderId ? await getOrder(activeOrderId) : null;
+        renderOrderDetails(activeOrderData);
+    }
+
+    function renderOrderDetails(order) {
+        elements.orderList.innerHTML = '';
+
+        if (!order || !activeOrderId) {
+            elements.emptyOrder.textContent = 'Selecciona una orden o crea una nueva para empezar.';
+            elements.emptyOrder.style.display = 'block';
+            elements.orderSummary.style.display = 'none';
+            elements.checkoutBtn.style.display = 'none';
+            elements.cancelBtn.style.display = 'none';
+            return;
+        }
+
+        if (order.items.length === 0) {
+            elements.emptyOrder.textContent = `La orden "${order.name}" está vacía. Agrega productos.`;
+            elements.emptyOrder.style.display = 'block';
+        } else {
+            elements.emptyOrder.style.display = 'none';
+        }
+
+
+        if (order.items.length > 0) {
+            elements.orderSummary.style.display = 'block';
+            elements.checkoutBtn.style.display = 'block';
+            elements.cancelBtn.style.display = 'block';
+        } else {
+             // Si la orden existe pero está vacía, mostrar solo los botones de gestión
+            elements.orderSummary.style.display = 'none';
+            elements.checkoutBtn.style.display = 'block'; 
+            elements.cancelBtn.style.display = 'block';
+        }
+        
+
+        order.items.forEach(item => {
+            const itemElement = document.createElement('div');
+            itemElement.className = 'order-item';
+            itemElement.innerHTML = `
+                <div class="order-item-details">
+                    <span class="order-item-name">${item.name}</span>
+                    <br>
+                    <span>${item.qty} x $${item.price.toFixed(2)} = $${(item.price * item.qty).toFixed(2)}</span>
+                </div>
+                <div class="order-item-controls">
+                    <button class="qty-button" onclick="updateItemQuantity('${item.id}', 1)">+</button>
+                    <span style="margin: 0 10px;">${item.qty}</span>
+                    <button class="qty-button" onclick="updateItemQuantity('${item.id}', -1)">-</button>
+                </div>
+            `;
+            elements.orderList.appendChild(itemElement);
+        });
+
+        // Actualizar el resumen
+        const { subtotal, tax, total } = calculateTotal(order);
+        elements.subtotalAmount.textContent = `$${subtotal.toFixed(2)}`;
+        elements.taxAmount.textContent = `$${tax.toFixed(2)}`;
+        elements.totalAmount.textContent = `$${total.toFixed(2)}`;
+    }
+    
+    // --- LÓGICA DE VENTA/HISTORIAL (MODIFICADA CON FILTROS) ---
+
+    async function checkoutOrder() {
+        if (!activeOrderId) return;
+        
+        let order = await getOrder(activeOrderId);
+
+        if (order.items.length === 0) {
+            showStatus('La orden está vacía. No se puede cobrar.', 2000);
+            return;
+        }
+
+        if (!confirm(`¿Confirmar el cobro de la orden "${order.name}" por $${calculateTotal(order).total.toFixed(2)}?`)) return;
+
+        showLoading(true);
+        const { total } = calculateTotal(order);
+        
+        const saleData = {
+            timestamp: Date.now(),
+            date: new Date().toLocaleString('es-ES'),
+            total: total,
+            details: order.items,
+            orderName: order.name 
+        };
+        
+        try {
+            await transaction(STORE_SALES, 'readwrite', (store) => { store.add(saleData); });
+            await deleteOrder(activeOrderId);
+            showStatus(`Venta de ${order.name} registrada con éxito! 🎉`, 3000);
+            activeOrderId = null;
+            await renderOrderManagement();
+
+        } catch (error) {
+            console.error('Checkout Error:', error);
+            showStatus(`❌ Error al cobrar: ${error.message}`, 5000);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function fetchHistory(startDateTimestamp = null, endDateTimestamp = null) {
+        elements.loadingHistory.style.display = 'block';
+        elements.historyList.innerHTML = '';
+        showLoading(true);
+        
+        try {
+            await openDB();
+            let history = [];
+
+            await transaction(STORE_SALES, 'readonly', (store, resolve) => {
+                const request = store.openCursor(null, 'prev'); 
+                request.onsuccess = (event) => {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        const sale = cursor.value;
+                        const saleTimestamp = sale.timestamp;
+                        
+                        let include = true;
+                        
+                        if (startDateTimestamp && saleTimestamp < startDateTimestamp) {
+                            include = false;
+                        }
+
+                        if (endDateTimestamp && saleTimestamp > endDateTimestamp) {
+                            include = false;
+                        }
+
+                        if (include) {
+                            history.push(sale);
+                        }
+                        cursor.continue();
+                    } else {
+                        resolve();
+                    }
+                };
+            });
+
+            elements.loadingHistory.style.display = 'none';
+            
+            if (history.length === 0) {
+                 elements.historyList.innerHTML = '<p>No se encontraron ventas para este rango de fechas.</p>';
+                 return;
+            }
+
+            history.forEach(sale => {
+                const item = document.createElement('li');
+                item.className = 'history-item';
+                const name = sale.orderName ? sale.orderName : `Venta #${sale.id}`;
+                const saleDate = new Date(sale.timestamp);
+                
+                const timeStr = saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = saleDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+
+                item.innerHTML = `
+                    <div class="history-item-details">
+                        <strong>${name}</strong>
+                        <div class="history-item-date">
+                            <span>&#128339;</span> ${dateStr} - ${timeStr}
+                        </div>
+                    </div>
+                    <div class="history-item-total">$${sale.total.toFixed(2)}</div>
+                `;
+                elements.historyList.appendChild(item);
+            });
+        } catch (error) {
+            console.error('Fetch History Error:', error);
+            elements.loadingHistory.textContent = '❌ Error al cargar historial desde el almacenamiento local.';
+            showStatus('Error de conexión con el historial local.', 5000);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // --- MANEJO DE EVENTOS ---
+
+    // Cambiar de pestaña (Mismo que antes)
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const targetPageId = e.currentTarget.dataset.page;
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById(targetPageId).classList.add('active');
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            
+            if (targetPageId === 'history-page') {
+                // Al entrar en historial, mostrar las ventas de HOY por defecto
+                const today = new Date();
+                const start = startOfDay(today);
+                const end = endOfDay(today);
+                fetchHistory(start, end);
+                // Establecer los campos de fecha visualmente
+                const todayISO = today.toISOString().split('T')[0];
+                elements.dateFrom.value = todayISO;
+                elements.dateTo.value = todayISO;
+
+            } else if (targetPageId === 'order-page') {
+                renderOrderManagement();
+            } else if (targetPageId === 'admin-page') {
+                renderAdminProducts();
+                elements.productForm.reset();
+                elements.productId.value = '';
+                elements.productSubmitBtn.textContent = 'Guardar Producto';
+            }
+        });
+    });
+
+    // Eventos de Órdenes (Mismos que antes)
+    elements.newOrderBtn.addEventListener('click', createNewOrder);
+    elements.orderSelector.addEventListener('change', (e) => { setActiveOrder(e.target.value); });
+    elements.checkoutBtn.addEventListener('click', checkoutOrder);
+    elements.cancelBtn.addEventListener('click', async () => {
+        if (!activeOrderId) return;
+        let order = await getOrder(activeOrderId);
+        if (confirm(`¿Estás seguro de CANCELAR y ELIMINAR la orden "${order.name}"?`)) {
+            await deleteOrder(activeOrderId);
+            activeOrderId = null;
+            await renderOrderManagement();
+            showStatus('Orden cancelada y eliminada.', 1500);
+        }
+    });
+
+    // Eventos de Administración (Mismos que antes)
+    elements.productForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = elements.productId.value;
+        const name = elements.productName.value.trim();
+        const price = parseFloat(elements.productPrice.value);
+        if (name && !isNaN(price) && price >= 0) {
+            const product = { id: id || 'PROD_' + Date.now(), name: name, price: price.toFixed(2) };
+            try {
+                await saveProduct(product);
+                elements.productForm.reset();
+                elements.productId.value = '';
+                elements.productSubmitBtn.textContent = 'Guardar Producto';
+                showStatus(`"${name}" guardado exitosamente.`, 2500);
+            } catch (error) {
+                showStatus('Error al guardar el producto. 🛑', 3000);
+            }
+        } else {
+            showStatus('Por favor, ingresa un nombre y un precio válido.', 2500);
+        }
+    });
+
+    elements.clearAllDataBtn.addEventListener('click', () => {
+        if (!confirm('⚠️ ADVERTENCIA: Se ELIMINARÁN PERMANENTEMENTE TODAS las ventas, órdenes abiertas y productos del menú. ¿Estás seguro?')) { return; }
+        indexedDB.deleteDatabase(DB_NAME);
+        localStorage.clear();
+        db = null; PRODUCTS = []; activeOrderId = null;
+        init(); 
+        showStatus('✅ Todos los datos locales han sido ELIMINADOS y reiniciados.', 5000);
+    });
+    
+    // --- EVENTOS DE FILTRO DE HISTORIAL (NUEVOS) ---
+
+    elements.filterTodayBtn.addEventListener('click', () => {
+        const today = new Date();
+        const todayISO = today.toISOString().split('T')[0];
+        elements.dateFrom.value = todayISO;
+        elements.dateTo.value = todayISO;
+        fetchHistory(startOfDay(today), endOfDay(today));
+    });
+
+    elements.filterHistoryBtn.addEventListener('click', () => {
+        const dateFromValue = elements.dateFrom.value;
+        const dateToValue = elements.dateTo.value;
+
+        if (!dateFromValue || !dateToValue) {
+            showStatus('Debes seleccionar ambas fechas para filtrar por rango.', 3000);
+            return;
+        }
+
+        const startTimestamp = startOfDay(new Date(dateFromValue));
+        const endTimestamp = endOfDay(new Date(dateToValue));
+        
+        if (startTimestamp > endTimestamp) {
+            showStatus('La fecha "Desde" no puede ser posterior a la fecha "Hasta".', 3000);
+            return;
+        }
+
+        fetchHistory(startTimestamp, endTimestamp);
+    });
+
+
+    // --- INICIALIZACIÓN ---
+    async function init() {
+        try {
+            await openDB();
+            await fetchProducts(); 
+            await renderOrderManagement(); 
+        } catch (error) {
+            showStatus(`Error crítico al iniciar DB: ${error}`, 10000);
+            console.error(error);
+        }
+    }
+
+    init();
+</script>
+
 </body>
 </html>
