@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Taqueria de Lervy</title>
+    <link rel="manifest" href="./manifest.json">
     <style>
         /* --- ESTILOS CSS PARA DISEÑO MÓVIL Y ESTÉTICA --- */
         :root {
@@ -352,6 +353,31 @@ display: flex; justify-content: space-around;
 </div>
 
 <script>
+
+
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registrado con éxito:', registration.scope);
+                    showStatus('PWA lista. Se puede instalar o usar sin conexión.', 4000);
+                })
+                .catch(error => {
+                    console.error('Fallo en el registro del ServiceWorker:', error);
+                    // Opcional: showStatus('Advertencia: Funcionalidad sin conexión limitada.', 4000);
+                });
+        });
+    } else {
+        console.warn('Este navegador no soporta Service Workers.');
+    }
+}
+
+// Llama a la función de registro al iniciar la app
+registerServiceWorker();
+
+
+
     // --- CONFIGURACIÓN DE DB Y VARIABLES GLOBALES ---
     const DB_NAME = 'POSDB';
     const DB_VERSION = 2; 
@@ -1114,9 +1140,25 @@ display: flex; justify-content: space-around;
     });
     elements.importFileInput.addEventListener('change', importData);
 
-    // --- INICIALIZACIÓN ---
+   // --- CONFIGURACIÓN E INSTALACIÓN DEL SERVICE WORKER (PWA) ---
+
+
+// --- FIN CONFIGURACIÓN SERVICE WORKER ---
+
+// --- INICIALIZACIÓN ---
     async function init() {
         try {
+            // LÓGICA DE REGISTRO DE SERVICE WORKER (PWA)
+            // (¡SE HA ELIMINADO window.addEventListener('load', ...)!)
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker Registrado con éxito:', reg.scope))
+                    .catch(err => console.error('Fallo el registro de Service Worker:', err));
+            } else {
+                console.log('El navegador no soporta Service Workers.');
+            }
+            
+            // Lógica de inicio de la app (IndexedDB, etc.)
             await openDB();
             await fetchProducts(); 
             await renderOrderManagement(); 
@@ -1127,7 +1169,12 @@ display: flex; justify-content: space-around;
         }
     }
 
+   
     init();
+
+     
+
+
 </script>
 
 </body>
