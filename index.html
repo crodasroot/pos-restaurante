@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>POS Restaurante — PWA Offline</title>
+
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1f2937" />
+
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-left">
+      <h1>POS 🍽️</h1>
+    </div>
+    <div class="topbar-center">
+      <button id="toggleMenuBtn" class="icon-btn" title="Menú">☰</button>
+    </div>
+    <div class="topbar-right">
+      <button id="backupBtn" class="icon-btn" title="Exportar">💾</button>
+      <button id="importBtn" class="icon-btn" title="Importar">📂</button>
+      <input id="fileInput" type="file" accept="application/json" style="display:none" />
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Panel Menú (Oculto en móvil por defecto) -->
+    <section id="menuPanel" class="panel menu-panel">
+      <h2>Menú / Platillos</h2>
+      <form id="itemForm" class="form-stack">
+        <input type="hidden" id="itemId" />
+        <div class="form-group">
+          <label for="itemName">Nombre del platillo:</label>
+          <input id="itemName" placeholder="Ej: Pizza Hawaiana" required />
+        </div>
+        <div class="form-group">
+          <label for="itemPrice">Precio:</label>
+          <input id="itemPrice" placeholder="0.00" type="number" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label for="itemType">Categoría:</label>
+          <select id="itemType">
+            <option value="platillo">🍽️ Platillo</option>
+            <option value="bebida">🥤 Bebida</option>
+            <option value="otros">📌 Otros</option>
+          </select>
+        </div>
+        <div class="form-buttons">
+          <button id="saveItemBtn" type="submit" class="btn-primary">Guardar</button>
+          <button id="clearItemBtn" type="button" class="btn-secondary">Limpiar</button>
+        </div>
+      </form>
+
+      <div class="items-container">
+        <div id="itemsList"></div>
+      </div>
+    </section>
+
+    <!-- Panel Carrito (Visible siempre en móvil) -->
+    <section id="cartPanel" class="panel cart-panel">
+      <div class="orders-header">
+        <h2 style="margin:0">🛒 Órdenes</h2>
+        <button id="newOrderBtn" class="btn-primary btn-small" style="margin:0">+ Nueva</button>
+      </div>
+
+      <div id="ordersTabs" class="orders-tabs"></div>
+
+      <div id="cartList" class="cart-list"></div>
+      
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Items:</span>
+          <strong id="cartCount">0</strong>
+        </div>
+        <div class="summary-row total">
+          <span>Total Orden:</span>
+          <strong id="cartTotal">Q 0.00</strong>
+        </div>
+      </div>
+
+      <div class="cart-buttons">
+        <button id="clearCartBtn" class="btn-secondary btn-full">Vaciar orden</button>
+        <button id="checkoutBtn" class="btn-primary btn-full btn-large">Cobrar esta orden</button>
+      </div>
+    </section>
+
+    <!-- Panel Historial (Oculto por defecto) -->
+    <section id="historyPanel" class="panel history-panel">
+      <h2>📋 Historial de Ventas</h2>
+      <div class="filter-buttons">
+        <button class="filter-btn active" data-filter="day">Hoy</button>
+        <button class="filter-btn" data-filter="week">Semana</button>
+        <button class="filter-btn" data-filter="month">Mes</button>
+        <button class="filter-btn" data-filter="year">Año</button>
+      </div>
+      <div class="date-range-filter">
+        <div class="date-input-group">
+          <label for="dateFrom">Desde:</label>
+          <input type="date" id="dateFrom" class="date-input" />
+        </div>
+        <div class="date-input-group">
+          <label for="dateTo">Hasta:</label>
+          <input type="date" id="dateTo" class="date-input" />
+        </div>
+      </div>
+      <div id="salesList"></div>
+    </section>
+  </main>
+
+  <!-- Navegación inferior -->
+  <nav class="bottom-nav">
+    <button class="nav-btn" id="nav-menu" title="Menú">🍽️</button>
+    <button class="nav-btn" id="nav-cart" title="Carrito">🛒</button>
+    <button class="nav-btn active" id="nav-history" title="Historial">📋</button>
+  </nav>
+
+  <!-- Modal Cobro -->
+  <div id="checkoutModal" class="modal hidden">
+    <div class="modal-content modal-checkout">
+      <button class="modal-close" id="closeModalBtn">✕</button>
+      <h3>💳 Cobrar Orden #<span id="checkoutOrderId">0</span></h3>
+      
+      <div class="checkout-items-container">
+        <h4>Artículos:</h4>
+        <div id="checkoutItemsList" class="checkout-items-list"></div>
+      </div>
+
+      <div class="checkout-summary">
+        <div class="checkout-row">
+          <span>Subtotal:</span>
+          <strong id="checkoutSubtotal">Q0.00</strong>
+        </div>
+        <div class="checkout-row total">
+          <span>Total a cobrar:</span>
+          <strong id="checkoutTotal">Q0.00</strong>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="paidAmount">Recibido:</label>
+        <input id="paidAmount" type="number" step="0.01" placeholder="0.00" inputmode="decimal" />
+      </div>
+
+      <div class="checkout-change">
+        <span>Cambio:</span>
+        <strong id="changeDue">Q0.00</strong>
+      </div>
+
+      <div class="modal-buttons">
+        <button id="confirmPayBtn" class="btn-primary btn-full">✓ Confirmar Pago</button>
+        <button id="cancelPayBtn" class="btn-secondary btn-full">✕ Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/db.js"></script>
+  <script src="/app.js"></script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(console.error);
+    }
+  </script>
+</body>
+</html>
