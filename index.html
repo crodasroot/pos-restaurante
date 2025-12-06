@@ -13,6 +13,7 @@
             --color-accent: #ffb703; /* Amarillo/Dorado de Acento (Mejor contraste) */
             --color-success: #2a9d8f; /* Verde-Azul para Cobro */
             --color-danger: #e76f51; /* Naranja-Rojo para Cancelar/Borrar */
+            --color-info: #3498db; /* Azul para Info/Acciones Secundarias */
             --color-text-light: #f4f4f4;
             --color-text-dark: #1e1e1e;
             --mobile-padding: 15px;
@@ -71,7 +72,7 @@
             font-size: 1.5em;
         }
 
-        /* --- CONTROLES DE ORDEN --- */
+        /* --- CONTROLES Y FORMS GENERALES --- */
         #order-controls { 
             background-color: var(--color-secondary); padding: 10px; border-radius: 6px; 
             margin-bottom: 15px; display: flex; gap: 10px; align-items: center; 
@@ -81,7 +82,7 @@
             flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; 
             background-color: var(--color-tertiary); color: var(--color-text-light); 
         }
-        .add-order-button { background-color: #3498db; color: var(--color-text-light); padding: 10px 15px; font-size: 1em; border: none; border-radius: 4px; }
+        .add-order-button { background-color: var(--color-info); color: var(--color-text-light); padding: 10px 15px; font-size: 1em; border: none; border-radius: 4px; }
         
         /* --- ESTILOS DE PRODUCTOS (MENÚ) --- */
         #products-grid {
@@ -94,33 +95,26 @@
             text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
             cursor: pointer; transition: transform 0.15s, background-color 0.15s;
         }
-        .product-card:active { transform: scale(0.95); background-color: #333; }
-        .product-card-name { font-size: 1em; margin: 5px 0 2px 0; font-weight: bold; }
         .product-card-price { font-size: 1.2em; color: var(--color-accent); font-weight: bold; }
 
         /* --- ESTILOS DE ORDEN Y RESUMEN --- */
         .order-item {
+            background-color: var(--color-secondary); padding: 12px; border-radius: 8px; 
+            margin-bottom: 10px; border-left: 4px solid var(--color-accent);
             display: flex; justify-content: space-between; align-items: center;
-            background-color: var(--color-secondary); padding: 12px;
-            border-radius: 8px; margin-bottom: 10px;
-            border-left: 4px solid var(--color-accent);
         }
         .qty-button {
             background-color: var(--color-accent); color: var(--color-text-dark);
             border: none; width: 32px; height: 32px; border-radius: 50%;
             font-size: 1.2em; cursor: pointer; margin: 0 8px; font-weight: bold;
-            transition: background-color 0.1s;
         }
-        .qty-button:active { background-color: #ffc947; }
-        
-        #order-summary { background-color: var(--color-secondary); padding: 18px; border-radius: 10px; margin-top: 20px; border: 1px solid #333; }
-        #order-summary div { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .total-line { 
-            font-size: 1.6em; font-weight: bold; color: var(--color-success); 
-            padding-top: 15px; border-top: 2px dashed #333; 
+        #order-summary { 
+            background-color: var(--color-secondary); padding: 18px; border-radius: 10px; 
+            margin-top: 20px; border: 1px solid #333; 
         }
+        .total-line { font-size: 1.6em; font-weight: bold; color: var(--color-success); }
 
-        /* --- ESTILOS DE BOTÓN PRINCIPAL (GENERAL) --- */
+        /* --- BOTONES PRINCIPALES --- */
         .action-button { 
             width: 100%; padding: 18px; margin-top: 15px; border: none; border-radius: 8px; 
             font-size: 1.3em; font-weight: bold; cursor: pointer; transition: background-color 0.2s; 
@@ -128,50 +122,54 @@
         .checkout-button { background-color: var(--color-success); color: var(--color-text-light); } 
         .cancel-button { background-color: var(--color-danger); color: var(--color-text-light); } 
 
-        /* --- ESTILOS DE ADMINISTRACIÓN DE PRODUCTOS (CRUD) --- */
+        /* --- ESTILOS DE ADMINISTRACIÓN (CRUD y Backup) --- */
         .admin-form input, .admin-form button, .admin-form select {
             width: calc(100% - 20px); padding: 12px; margin-bottom: 10px;
             border-radius: 4px; border: 1px solid #555; background-color: var(--color-tertiary);
             color: var(--color-text-light); box-sizing: border-box;
         }
         .admin-form button[type="submit"] { background-color: var(--color-accent); color: var(--color-text-dark); }
-
+        
         .product-item-row {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 12px; border-bottom: 1px solid #333;
-            background-color: var(--color-secondary); margin-bottom: 5px;
-            border-radius: 4px;
-        }
-        .product-item-actions button {
-            background: none; border: none; cursor: pointer; color: var(--color-danger);
-            margin-left: 10px; font-size: 1.1em;
+            padding: 12px; border-bottom: 1px solid #333; background-color: var(--color-secondary);
+            margin-bottom: 5px; border-radius: 4px;
         }
 
-        /* --- ESTILOS DE HISTORIAL (FILTROS) --- */
-        #history-filters {
-            display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
-            padding: 15px; background-color: var(--color-secondary); border-radius: 8px;
+        /* Estilos específicos para Backup */
+        #backup-section {
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: var(--color-secondary);
+            margin-bottom: 20px;
         }
-        #history-filters .date-inputs { display: flex; gap: 10px; }
-        #history-filters input[type="date"] {
-            flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555;
-            background-color: var(--color-tertiary); color: var(--color-text-light);
-            box-sizing: border-box; font-size: 1em;
+        .backup-button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background-color 0.2s;
         }
-        #filter-history-btn { background-color: #3498db; color: var(--color-text-light); }
-        #filter-today-btn { background-color: var(--color-accent); color: var(--color-text-dark); width: 100%; }
-
-        .history-list { list-style: none; padding: 0; }
-        .history-item { 
-            background-color: var(--color-secondary); padding: 15px; border-radius: 8px; 
-            margin-bottom: 12px; display: flex; justify-content: space-between; 
-            align-items: center; border-left: 5px solid var(--color-success);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        #export-data-btn {
+            background-color: var(--color-info); /* Azul */
+            color: var(--color-text-light);
         }
-        .history-item-details { flex-grow: 1; }
-        .history-item-date { font-size: 0.9em; color: #aaa; margin-top: 4px;}
-        .history-item-date span { margin-right: 5px; color: var(--color-accent); }
-        .history-item-total { font-size: 1.7em; font-weight: bold; color: var(--color-success); }
+        #import-file-input {
+            width: 100%; 
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            padding: 10px;
+            background-color: var(--color-tertiary);
+        }
+        #import-data-btn {
+            background-color: var(--color-success); /* Verde */
+            color: var(--color-text-light);
+            margin-bottom: 10px;
+        }
         
         /* Mensaje de Estado (Toast) */
         #status-message {
@@ -230,7 +228,7 @@
                     <input type="date" id="date-from" title="Desde">
                     <input type="date" id="date-to" title="Hasta">
                 </div>
-                <button id="filter-history-btn">🔍 Aplicar Rango de Fechas</button>
+                <button id="filter-history-btn" class="add-order-button" style="width: 100%;">🔍 Aplicar Rango de Fechas</button>
             </div>
 
             <ul id="history-list" class="history-list">
@@ -239,7 +237,7 @@
         </div>
         
         <div id="admin-page" class="page">
-            <h2>⚙️ Gestión de Productos</h2>
+            <h2>⚙️ Gestión de Productos y Data</h2>
             
             <h3>➕ Agregar/Editar Producto</h3>
             <form id="product-form" class="admin-form">
@@ -254,6 +252,22 @@
             <h3>📋 Menú Actual</h3>
             <div id="product-list-admin">
                 </div>
+            
+            <hr style="border-color:#333; margin: 20px 0;">
+            
+            <h3>💾 Respaldo y Restauración de Data</h3>
+            <div id="backup-section">
+                <h4>Exportar Data (Backup)</h4>
+                <p style="font-size:0.9em; color:#aaa;">Descarga toda la base de datos (Menú, Órdenes, Ventas) como un archivo JSON.</p>
+                <button id="export-data-btn" class="backup-button">⬇️ Exportar Data Completa</button>
+
+                <hr style="border-color:#333; margin: 15px 0;">
+
+                <h4>Importar Data (Restaurar)</h4>
+                <p style="font-size:0.9em; color:var(--color-danger); font-weight: bold;">ADVERTENCIA: Esto SOBREESCRIBIRÁ todos los datos existentes.</p>
+                <input type="file" id="import-file-input" accept=".json">
+                <button id="import-data-btn" class="backup-button">⬆️ Importar y Restaurar Data</button>
+            </div>
             
             <hr style="border-color:#333; margin: 20px 0;">
             
@@ -287,8 +301,9 @@
     const STORE_PRODUCTS = 'products';
     const STORE_SALES = 'sales';
     const STORE_ORDERS = 'orders'; 
+    const ALL_STORES = [STORE_PRODUCTS, STORE_SALES, STORE_ORDERS];
     const LOCAL_STORAGE_ACTIVE_ORDER_ID = 'activeOrderId'; 
-    const CURRENCY_SYMBOL = 'Q'; // Símbolo de Quetzales
+    const CURRENCY_SYMBOL = 'Q';
 
     let db;
     let PRODUCTS = []; 
@@ -313,7 +328,7 @@
         loadingProducts: document.getElementById('loading-products'),
         loadingHistory: document.getElementById('loading-history'),
         
-        // Elementos de Administración
+        // Administración
         productForm: document.getElementById('product-form'),
         productId: document.getElementById('product-id'),
         productName: document.getElementById('product-name'),
@@ -322,11 +337,16 @@
         productListAdmin: document.getElementById('product-list-admin'),
         clearAllDataBtn: document.getElementById('clear-all-data-btn'),
 
-        // Elementos de Historial
+        // Historial
         dateFrom: document.getElementById('date-from'),
         dateTo: document.getElementById('date-to'),
         filterHistoryBtn: document.getElementById('filter-history-btn'),
-        filterTodayBtn: document.getElementById('filter-today-btn')
+        filterTodayBtn: document.getElementById('filter-today-btn'),
+        
+        // Backup (NUEVOS)
+        exportDataBtn: document.getElementById('export-data-btn'),
+        importFileInput: document.getElementById('import-file-input'),
+        importDataBtn: document.getElementById('import-data-btn')
     };
 
     // --- FUNCIONES DE UTILIDAD DE INTERFAZ Y FECHAS ---
@@ -394,8 +414,8 @@
         });
     }
 
-    // --- LÓGICA DE PRODUCTOS (CRUD) ---
-
+    // --- LÓGICA DE PRODUCTOS (CRUD y Renderizado) ---
+    
     async function getAllProductsFromDB() {
         await openDB();
         let products = [];
@@ -487,6 +507,7 @@
 
 
     // --- LÓGICA DE ÓRDENES ABIERTAS (Múltiples Órdenes) ---
+    // (Funciones getOrder, saveOrder, deleteOrder, etc., son las mismas que antes)
 
     async function getOrder(orderId) {
         await openDB();
@@ -575,7 +596,7 @@
         await saveOrder(order);
         showStatus(`${product.name} agregado a la orden.`, 1500);
         renderOrderDetails(order);
-        renderOrderManagement(); // Actualizar el total en el selector
+        renderOrderManagement();
     }
 
     async function updateItemQuantity(productId, change) {
@@ -594,7 +615,7 @@
         
         await saveOrder(order);
         renderOrderDetails(order);
-        renderOrderManagement(); // Actualizar el total en el selector
+        renderOrderManagement();
     }
 
     function calculateTotal(order) {
@@ -653,7 +674,6 @@
             elements.emptyOrder.style.display = 'none';
         }
 
-        // Mostrar botones si hay una orden activa, incluso si está vacía, para poder cancelarla.
         elements.checkoutBtn.style.display = 'block'; 
         elements.cancelBtn.style.display = 'block';
         
@@ -669,7 +689,7 @@
             itemElement.className = 'order-item';
             itemElement.innerHTML = `
                 <div class="order-item-details">
-                    <span class="order-item-name">${item.name}</span>
+                    <span class="order-item-name"><strong>${item.name}</strong></span>
                     <br>
                     <span>${item.qty} x ${formatCurrency(item.price)} = ${formatCurrency(item.price * item.qty)}</span>
                 </div>
@@ -802,6 +822,91 @@
             showLoading(false);
         }
     }
+    
+    // --- LÓGICA DE BACKUP (EXPORTAR / IMPORTAR) ---
+
+    async function exportData() {
+        showLoading(true);
+        try {
+            await openDB();
+            const data = {};
+            
+            for (const storeName of ALL_STORES) {
+                let items = [];
+                await transaction(storeName, 'readonly', (store, resolve) => {
+                    const request = store.getAll();
+                    request.onsuccess = (event) => {
+                        items = event.target.result;
+                        resolve();
+                    };
+                });
+                data[storeName] = items;
+            }
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `pos_backup_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showStatus('✅ Data exportada con éxito!', 3000);
+
+        } catch (error) {
+            console.error('Export Error:', error);
+            showStatus('❌ Error al exportar data.', 5000);
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!confirm('⚠️ ADVERTENCIA: ¿Está seguro de importar esta data? Esto BORRARÁ y REEMPLAZARÁ todos los datos actuales (Productos, Órdenes y Ventas).')) {
+            elements.importFileInput.value = '';
+            return;
+        }
+
+        showLoading(true);
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const importedData = JSON.parse(e.target.result);
+
+                await openDB();
+                
+                // Borrar datos actuales y restaurar
+                for (const storeName of ALL_STORES) {
+                    if (importedData[storeName]) {
+                        await transaction(storeName, 'readwrite', (store) => {
+                            store.clear(); // Borra todo en la store actual
+                            importedData[storeName].forEach(item => store.put(item)); // Inserta data nueva
+                        });
+                    }
+                }
+                
+                // Limpiar el estado y reiniciar la aplicación
+                localStorage.removeItem(LOCAL_STORAGE_ACTIVE_ORDER_ID);
+                await init();
+                showStatus('✅ Data importada y restaurada con éxito!', 5000);
+
+            } catch (error) {
+                console.error('Import Error:', error);
+                showStatus('❌ Error al importar. Asegúrate de que el archivo sea un JSON válido de respaldo.', 8000);
+            } finally {
+                showLoading(false);
+                elements.importFileInput.value = ''; // Resetear el input
+            }
+        };
+        reader.readAsText(file);
+    }
 
     // --- MANEJO DE EVENTOS ---
 
@@ -815,8 +920,7 @@
             e.currentTarget.classList.add('active');
             
             if (targetPageId === 'history-page') {
-                // Al entrar en historial, cargar TODAS las ventas por defecto (sin filtros)
-                fetchHistory();
+                fetchHistory(); 
                 elements.dateFrom.value = '';
                 elements.dateTo.value = '';
 
@@ -877,8 +981,7 @@
         showStatus('✅ Todos los datos locales han sido ELIMINADOS y reiniciados.', 5000);
     });
     
-    // --- EVENTOS DE FILTRO DE HISTORIAL ---
-
+    // Eventos de Filtro de Historial
     elements.filterTodayBtn.addEventListener('click', () => {
         const today = new Date();
         const todayISO = today.toISOString().split('T')[0];
@@ -891,7 +994,6 @@
         const dateFromValue = elements.dateFrom.value;
         const dateToValue = elements.dateTo.value;
         
-        // Si no hay fechas, se usa la función sin parámetros, lo que trae todo.
         if (!dateFromValue && !dateToValue) {
             fetchHistory(); 
             return;
@@ -912,7 +1014,14 @@
 
         fetchHistory(startTimestamp, endTimestamp);
     });
-
+    
+    // Eventos de Backup (NUEVOS)
+    elements.exportDataBtn.addEventListener('click', exportData);
+    elements.importDataBtn.addEventListener('click', () => {
+        // Simular clic en el input de tipo file al presionar el botón
+        elements.importFileInput.click();
+    });
+    elements.importFileInput.addEventListener('change', importData);
 
     // --- INICIALIZACIÓN ---
     async function init() {
