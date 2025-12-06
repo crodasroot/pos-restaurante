@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POS Móvil - Offline Avanzado (Historial Filtrable)</title>
+    <title>POS Móvil - Q Quetzales (Offline Avanzado)</title>
     <style>
         /* --- ESTILOS CSS PARA DISEÑO MÓVIL Y ESTÉTICA --- */
         :root {
-            --color-primary: #1e1e1e; /* Fondo Oscuro */
-            --color-secondary: #333; /* Fondo de Tarjetas */
-            --color-accent: #ff6b6b; /* Rojo/Naranja de Acento */
+            --color-primary: #121212; /* Fondo Muy Oscuro */
+            --color-secondary: #1e1e1e; /* Fondo de Tarjetas y Secciones */
+            --color-tertiary: #2e2e2e; /* Fondo de Inputs/Controles */
+            --color-accent: #ffb703; /* Amarillo/Dorado de Acento (Mejor contraste) */
+            --color-success: #2a9d8f; /* Verde-Azul para Cobro */
+            --color-danger: #e76f51; /* Naranja-Rojo para Cancelar/Borrar */
             --color-text-light: #f4f4f4;
             --color-text-dark: #1e1e1e;
             --mobile-padding: 15px;
@@ -22,6 +25,7 @@
             background-color: var(--color-primary);
             color: var(--color-text-light);
             -webkit-tap-highlight-color: transparent;
+            font-size: 16px;
         }
 
         /* Contenedor Principal de la Aplicación */
@@ -32,7 +36,7 @@
             max-width: 600px; 
             margin: 0 auto;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
         }
 
         /* Área de Contenido */
@@ -45,7 +49,7 @@
         /* --- PESTAÑAS Y NAVEGACIÓN --- */
         #nav-bar {
             display: flex; justify-content: space-around; background-color: var(--color-secondary);
-            border-top: 1px solid #444; box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.3);
+            border-top: 1px solid #333; box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5);
             position: sticky; bottom: 0; z-index: 100;
         }
         .tab-button {
@@ -59,82 +63,123 @@
 
         .page { display: none; padding-bottom: 20px; }
         .page.active { display: block; }
-        h2 { border-bottom: 2px solid var(--color-accent); padding-bottom: 5px; margin-top: 0; color: var(--color-text-light); }
+        h2 { 
+            border-bottom: 2px solid var(--color-accent); 
+            padding-bottom: 5px; 
+            margin-top: 0; 
+            color: var(--color-text-light); 
+            font-size: 1.5em;
+        }
 
-        /* --- CONTROLES DE ORDEN Y MENÚ (Mismos que antes) --- */
-        #order-controls { background-color: #444; padding: 10px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; align-items: center; }
-        #order-selector { flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: #333; color: var(--color-text-light); }
-        #products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-        .product-card { background-color: var(--color-secondary); border-radius: 8px; padding: 10px; text-align: center; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); cursor: pointer; transition: transform 0.1s; }
-        .qty-button { background-color: var(--color-accent); color: var(--color-text-light); border: none; width: 30px; height: 30px; border-radius: 50%; font-size: 1.2em; cursor: pointer; margin: 0 5px; }
+        /* --- CONTROLES DE ORDEN --- */
+        #order-controls { 
+            background-color: var(--color-secondary); padding: 10px; border-radius: 6px; 
+            margin-bottom: 15px; display: flex; gap: 10px; align-items: center; 
+            border: 1px solid #333;
+        }
+        #order-selector { 
+            flex-grow: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; 
+            background-color: var(--color-tertiary); color: var(--color-text-light); 
+        }
+        .add-order-button { background-color: #3498db; color: var(--color-text-light); padding: 10px 15px; font-size: 1em; border: none; border-radius: 4px; }
+        
+        /* --- ESTILOS DE PRODUCTOS (MENÚ) --- */
+        #products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
+        }
+        .product-card {
+            background-color: var(--color-secondary); border-radius: 10px; padding: 15px 10px;
+            text-align: center; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            cursor: pointer; transition: transform 0.15s, background-color 0.15s;
+        }
+        .product-card:active { transform: scale(0.95); background-color: #333; }
+        .product-card-name { font-size: 1em; margin: 5px 0 2px 0; font-weight: bold; }
+        .product-card-price { font-size: 1.2em; color: var(--color-accent); font-weight: bold; }
+
+        /* --- ESTILOS DE ORDEN Y RESUMEN --- */
+        .order-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background-color: var(--color-secondary); padding: 12px;
+            border-radius: 8px; margin-bottom: 10px;
+            border-left: 4px solid var(--color-accent);
+        }
+        .qty-button {
+            background-color: var(--color-accent); color: var(--color-text-dark);
+            border: none; width: 32px; height: 32px; border-radius: 50%;
+            font-size: 1.2em; cursor: pointer; margin: 0 8px; font-weight: bold;
+            transition: background-color 0.1s;
+        }
+        .qty-button:active { background-color: #ffc947; }
+        
+        #order-summary { background-color: var(--color-secondary); padding: 18px; border-radius: 10px; margin-top: 20px; border: 1px solid #333; }
+        #order-summary div { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .total-line { 
+            font-size: 1.6em; font-weight: bold; color: var(--color-success); 
+            padding-top: 15px; border-top: 2px dashed #333; 
+        }
 
         /* --- ESTILOS DE BOTÓN PRINCIPAL (GENERAL) --- */
-        .action-button { width: 100%; padding: 15px; margin-top: 10px; border: none; border-radius: 8px; font-size: 1.2em; font-weight: bold; cursor: pointer; transition: background-color 0.2s; }
-        .checkout-button { background-color: #2ecc71; color: var(--color-text-light); } 
-        .cancel-button { background-color: #e74c3c; color: var(--color-text-light); } 
-        .add-order-button { background-color: #3498db; color: var(--color-text-light); } 
-        
-        /* --- ESTILOS DE HISTORIAL (MEJORADOS) --- */
+        .action-button { 
+            width: 100%; padding: 18px; margin-top: 15px; border: none; border-radius: 8px; 
+            font-size: 1.3em; font-weight: bold; cursor: pointer; transition: background-color 0.2s; 
+        }
+        .checkout-button { background-color: var(--color-success); color: var(--color-text-light); } 
+        .cancel-button { background-color: var(--color-danger); color: var(--color-text-light); } 
+
+        /* --- ESTILOS DE ADMINISTRACIÓN DE PRODUCTOS (CRUD) --- */
+        .admin-form input, .admin-form button, .admin-form select {
+            width: calc(100% - 20px); padding: 12px; margin-bottom: 10px;
+            border-radius: 4px; border: 1px solid #555; background-color: var(--color-tertiary);
+            color: var(--color-text-light); box-sizing: border-box;
+        }
+        .admin-form button[type="submit"] { background-color: var(--color-accent); color: var(--color-text-dark); }
+
+        .product-item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; border-bottom: 1px solid #333;
+            background-color: var(--color-secondary); margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        .product-item-actions button {
+            background: none; border: none; cursor: pointer; color: var(--color-danger);
+            margin-left: 10px; font-size: 1.1em;
+        }
+
+        /* --- ESTILOS DE HISTORIAL (FILTROS) --- */
         #history-filters {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #444;
-            border-radius: 6px;
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;
+            padding: 15px; background-color: var(--color-secondary); border-radius: 8px;
         }
-
-        #history-filters .date-inputs {
-            display: flex;
-            gap: 10px;
-        }
-
+        #history-filters .date-inputs { display: flex; gap: 10px; }
         #history-filters input[type="date"] {
-            flex: 1;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            background-color: #333;
-            color: var(--color-text-light);
-            box-sizing: border-box;
+            flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555;
+            background-color: var(--color-tertiary); color: var(--color-text-light);
+            box-sizing: border-box; font-size: 1em;
         }
-        
-        #filter-history-btn, #filter-today-btn {
-            padding: 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            border: none;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        #filter-history-btn {
-            background-color: #f39c12; /* Naranja para Filtrar */
-            color: var(--color-text-dark);
-        }
-        
-        #filter-today-btn {
-            background-color: #1abc9c; /* Turquesa para Hoy */
-            color: var(--color-text-light);
-            width: 100%;
-        }
+        #filter-history-btn { background-color: #3498db; color: var(--color-text-light); }
+        #filter-today-btn { background-color: var(--color-accent); color: var(--color-text-dark); width: 100%; }
 
         .history-list { list-style: none; padding: 0; }
         .history-item { 
-            background-color: var(--color-secondary); 
-            padding: 12px; 
-            border-radius: 6px; 
-            margin-bottom: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            border-left: 5px solid #2ecc71; /* Barra de color para destacar */
+            background-color: var(--color-secondary); padding: 15px; border-radius: 8px; 
+            margin-bottom: 12px; display: flex; justify-content: space-between; 
+            align-items: center; border-left: 5px solid var(--color-success);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
         .history-item-details { flex-grow: 1; }
-        .history-item-date { font-size: 0.9em; color: #ccc; margin-top: 4px;}
+        .history-item-date { font-size: 0.9em; color: #aaa; margin-top: 4px;}
         .history-item-date span { margin-right: 5px; color: var(--color-accent); }
-        .history-item-total { font-size: 1.5em; font-weight: bold; color: #2ecc71; }
+        .history-item-total { font-size: 1.7em; font-weight: bold; color: var(--color-success); }
+        
+        /* Mensaje de Estado (Toast) */
+        #status-message {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.9); color: white; padding: 20px 30px;
+            border-radius: 10px; z-index: 1000; display: none; text-align: center;
+            font-size: 1.1em; box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -146,7 +191,7 @@
     <div id="content-area">
         
         <div id="menu-page" class="page active">
-            <h2>🍔 Menú de Productos</h2>
+            <h2>🍽️ Menú de Productos</h2>
             <div id="products-grid">
                 <p id="loading-products">Cargando menú...</p>
             </div>
@@ -157,20 +202,22 @@
             
             <div id="order-controls">
                 <select id="order-selector"></select>
-                <button id="new-order-btn" class="add-order-button" style="padding: 10px 15px; font-size: 1em;">+ Nueva Orden</button>
+                <button id="new-order-btn" class="add-order-button" >+ Nueva Orden</button>
             </div>
             
             <div id="order-list">
-                <p id="empty-order">Selecciona una orden o crea una nueva.</p>
-            </div>
+                </div>
+
+            <p id="empty-order" style="text-align: center; color: #aaa;">Selecciona una orden o crea una nueva.</p>
+
 
             <div id="order-summary" style="display: none;">
-                <div><span>Subtotal:</span> <span id="subtotal-amount">0.00</span></div>
-                <div><span>Impuestos (0%):</span> <span id="tax-amount">0.00</span></div>
-                <div class="total-line"><span>Total:</span> <span id="total-amount">0.00</span></div>
+                <div><span>Subtotal:</span> <span id="subtotal-amount">Q0.00</span></div>
+                <div><span>Impuestos (0%):</span> <span id="tax-amount">Q0.00</span></div>
+                <div class="total-line"><span>Total:</span> <span id="total-amount">Q0.00</span></div>
             </div>
 
-            <button id="checkout-btn" class="action-button checkout-button" style="display: none;">✅ CERRAR Y COBRAR ORDEN</button>
+            <button id="checkout-btn" class="action-button checkout-button" style="display: none;">✅ COBRAR ORDEN</button>
             <button id="cancel-btn" class="action-button cancel-button" style="display: none;">❌ CANCELAR ORDEN</button>
         </div>
 
@@ -198,17 +245,17 @@
             <form id="product-form" class="admin-form">
                 <input type="hidden" id="product-id">
                 <input type="text" id="product-name" placeholder="Nombre del Producto" required>
-                <input type="number" id="product-price" placeholder="Precio (Ej: 12.50)" step="0.01" min="0" required>
+                <input type="number" id="product-price" placeholder="Precio (Q)" step="0.01" min="0" required>
                 <button type="submit" id="product-submit-btn">Guardar Producto</button>
             </form>
             
-            <hr style="border-color:#555; margin: 20px 0;">
+            <hr style="border-color:#333; margin: 20px 0;">
 
             <h3>📋 Menú Actual</h3>
             <div id="product-list-admin">
                 </div>
             
-            <hr style="border-color:#555; margin: 20px 0;">
+            <hr style="border-color:#333; margin: 20px 0;">
             
             <h3>🗑️ Limpieza de Datos</h3>
             <button id="clear-all-data-btn" class="action-button cancel-button" style="padding: 10px; margin-top: 5px;">🚨 ELIMINAR TODOS LOS DATOS LOCALES</button>
@@ -241,6 +288,7 @@
     const STORE_SALES = 'sales';
     const STORE_ORDERS = 'orders'; 
     const LOCAL_STORAGE_ACTIVE_ORDER_ID = 'activeOrderId'; 
+    const CURRENCY_SYMBOL = 'Q'; // Símbolo de Quetzales
 
     let db;
     let PRODUCTS = []; 
@@ -274,7 +322,7 @@
         productListAdmin: document.getElementById('product-list-admin'),
         clearAllDataBtn: document.getElementById('clear-all-data-btn'),
 
-        // Elementos de Historial (NUEVOS)
+        // Elementos de Historial
         dateFrom: document.getElementById('date-from'),
         dateTo: document.getElementById('date-to'),
         filterHistoryBtn: document.getElementById('filter-history-btn'),
@@ -299,29 +347,26 @@
         }
     }
 
-    /**
-     * Devuelve el timestamp de inicio del día (medianoche).
-     * @param {Date} date 
-     * @returns {number}
-     */
+    /** Formatea un número como moneda local (Q) */
+    function formatCurrency(number) {
+        return `${CURRENCY_SYMBOL}${parseFloat(number).toFixed(2)}`;
+    }
+
+    /** Devuelve el timestamp de inicio del día (medianoche). */
     function startOfDay(date) {
         const d = new Date(date);
         d.setHours(0, 0, 0, 0);
         return d.getTime();
     }
 
-    /**
-     * Devuelve el timestamp del final del día (un milisegundo antes de la medianoche siguiente).
-     * @param {Date} date 
-     * @returns {number}
-     */
+    /** Devuelve el timestamp del final del día (un milisegundo antes de la medianoche siguiente). */
     function endOfDay(date) {
         const d = new Date(date);
         d.setHours(23, 59, 59, 999);
         return d.getTime();
     }
     
-    // --- MANEJO DE INDEXEDDB (Mismos que antes) ---
+    // --- MANEJO DE INDEXEDDB ---
 
     function openDB() {
         return new Promise((resolve, reject) => {
@@ -349,8 +394,8 @@
         });
     }
 
-    // --- LÓGICA DE PRODUCTOS (CRUD) (Misma que antes) ---
-    
+    // --- LÓGICA DE PRODUCTOS (CRUD) ---
+
     async function getAllProductsFromDB() {
         await openDB();
         let products = [];
@@ -365,11 +410,11 @@
         await transaction(STORE_PRODUCTS, 'readwrite', (store) => { store.put(product); });
         PRODUCTS = await getAllProductsFromDB(); 
         renderProducts();
-        renderAdminProducts();
+        renderAdminProducts(); 
     }
 
     async function deleteProduct(productId) {
-        if (!confirm('¿Estás seguro de ELIMINAR este producto?')) return;
+        if (!confirm('¿Estás seguro de ELIMINAR permanentemente este producto?')) return;
         await transaction(STORE_PRODUCTS, 'readwrite', (store) => { store.delete(productId); });
         showStatus('Producto eliminado.', 2000);
         PRODUCTS = await getAllProductsFromDB();
@@ -380,11 +425,13 @@
     async function fetchProducts() {
         elements.loadingProducts.style.display = 'block';
         PRODUCTS = await getAllProductsFromDB();
+        
         if (PRODUCTS.length === 0) {
             elements.loadingProducts.textContent = 'Menú vacío. Agrega productos desde la pestaña "Admin".';
         } else {
             elements.loadingProducts.style.display = 'none';
         }
+        
         renderProducts();
         renderAdminProducts(); 
     }
@@ -397,7 +444,7 @@
             card.setAttribute('onclick', `addToOrder('${product.id}')`);
             card.innerHTML = `
                 <div class="product-card-name">${product.name}</div>
-                <div class="product-card-price">$${parseFloat(product.price).toFixed(2)}</div>
+                <div class="product-card-price">${formatCurrency(product.price)}</div>
             `;
             elements.productsGrid.appendChild(card);
         });
@@ -415,7 +462,7 @@
             row.className = 'product-item-row';
             row.innerHTML = `
                 <div class="product-item-info">
-                    <strong>${product.name}</strong> ($${parseFloat(product.price).toFixed(2)})
+                    <strong>${product.name}</strong> (${formatCurrency(product.price)})
                 </div>
                 <div class="product-item-actions">
                     <button onclick="editProduct('${product.id}')" title="Editar">&#9998;</button>
@@ -439,7 +486,7 @@
     }
 
 
-    // --- LÓGICA DE ÓRDENES ABIERTAS (Múltiples Órdenes) (Misma que antes) ---
+    // --- LÓGICA DE ÓRDENES ABIERTAS (Múltiples Órdenes) ---
 
     async function getOrder(orderId) {
         await openDB();
@@ -474,7 +521,10 @@
         const newOrderId = 'ORDER_' + Date.now();
         let orderName = prompt("Ingresa el nombre de la nueva orden (Ej: Mesa 5, Cliente A):", `Orden ${newOrderId.slice(-4)}`);
         
-        if (!orderName) return;
+        if (!orderName) {
+            showStatus('Creación de orden cancelada.', 1500);
+            return;
+        }
 
         const newOrder = {
             id: newOrderId,
@@ -492,7 +542,6 @@
         localStorage.setItem(LOCAL_STORAGE_ACTIVE_ORDER_ID, orderId);
         
         await renderOrderManagement();
-        // El selector ya está renderizado con las opciones correctas
         const selectedOption = elements.orderSelector.options[elements.orderSelector.selectedIndex];
         if(selectedOption) {
             showStatus(`Orden "${selectedOption.text.split('(')[0].trim()}" activada.`, 1500);
@@ -568,7 +617,7 @@
                 const option = document.createElement('option');
                 option.value = order.id;
                 const { total } = calculateTotal(order);
-                option.textContent = `${order.name} ($${total.toFixed(2)})`;
+                option.textContent = `${order.name} (${formatCurrency(total)})`;
                 elements.orderSelector.appendChild(option);
             });
 
@@ -604,16 +653,14 @@
             elements.emptyOrder.style.display = 'none';
         }
 
-
+        // Mostrar botones si hay una orden activa, incluso si está vacía, para poder cancelarla.
+        elements.checkoutBtn.style.display = 'block'; 
+        elements.cancelBtn.style.display = 'block';
+        
         if (order.items.length > 0) {
             elements.orderSummary.style.display = 'block';
-            elements.checkoutBtn.style.display = 'block';
-            elements.cancelBtn.style.display = 'block';
         } else {
-             // Si la orden existe pero está vacía, mostrar solo los botones de gestión
             elements.orderSummary.style.display = 'none';
-            elements.checkoutBtn.style.display = 'block'; 
-            elements.cancelBtn.style.display = 'block';
         }
         
 
@@ -624,7 +671,7 @@
                 <div class="order-item-details">
                     <span class="order-item-name">${item.name}</span>
                     <br>
-                    <span>${item.qty} x $${item.price.toFixed(2)} = $${(item.price * item.qty).toFixed(2)}</span>
+                    <span>${item.qty} x ${formatCurrency(item.price)} = ${formatCurrency(item.price * item.qty)}</span>
                 </div>
                 <div class="order-item-controls">
                     <button class="qty-button" onclick="updateItemQuantity('${item.id}', 1)">+</button>
@@ -637,12 +684,12 @@
 
         // Actualizar el resumen
         const { subtotal, tax, total } = calculateTotal(order);
-        elements.subtotalAmount.textContent = `$${subtotal.toFixed(2)}`;
-        elements.taxAmount.textContent = `$${tax.toFixed(2)}`;
-        elements.totalAmount.textContent = `$${total.toFixed(2)}`;
+        elements.subtotalAmount.textContent = formatCurrency(subtotal);
+        elements.taxAmount.textContent = formatCurrency(tax);
+        elements.totalAmount.textContent = formatCurrency(total);
     }
     
-    // --- LÓGICA DE VENTA/HISTORIAL (MODIFICADA CON FILTROS) ---
+    // --- LÓGICA DE VENTA/HISTORIAL ---
 
     async function checkoutOrder() {
         if (!activeOrderId) return;
@@ -654,10 +701,10 @@
             return;
         }
 
-        if (!confirm(`¿Confirmar el cobro de la orden "${order.name}" por $${calculateTotal(order).total.toFixed(2)}?`)) return;
+        const { total } = calculateTotal(order);
+        if (!confirm(`¿Confirmar el COBRO de la orden "${order.name}" por ${formatCurrency(total)}?`)) return;
 
         showLoading(true);
-        const { total } = calculateTotal(order);
         
         const saleData = {
             timestamp: Date.now(),
@@ -701,6 +748,7 @@
                         
                         let include = true;
                         
+                        // Aplicar filtros solo si se proporcionan
                         if (startDateTimestamp && saleTimestamp < startDateTimestamp) {
                             include = false;
                         }
@@ -733,7 +781,7 @@
                 const saleDate = new Date(sale.timestamp);
                 
                 const timeStr = saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const dateStr = saleDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+                const dateStr = saleDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 
                 item.innerHTML = `
                     <div class="history-item-details">
@@ -742,7 +790,7 @@
                             <span>&#128339;</span> ${dateStr} - ${timeStr}
                         </div>
                     </div>
-                    <div class="history-item-total">$${sale.total.toFixed(2)}</div>
+                    <div class="history-item-total">${formatCurrency(sale.total)}</div>
                 `;
                 elements.historyList.appendChild(item);
             });
@@ -757,7 +805,7 @@
 
     // --- MANEJO DE EVENTOS ---
 
-    // Cambiar de pestaña (Mismo que antes)
+    // Cambiar de pestaña
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', (e) => {
             const targetPageId = e.currentTarget.dataset.page;
@@ -767,15 +815,10 @@
             e.currentTarget.classList.add('active');
             
             if (targetPageId === 'history-page') {
-                // Al entrar en historial, mostrar las ventas de HOY por defecto
-                const today = new Date();
-                const start = startOfDay(today);
-                const end = endOfDay(today);
-                fetchHistory(start, end);
-                // Establecer los campos de fecha visualmente
-                const todayISO = today.toISOString().split('T')[0];
-                elements.dateFrom.value = todayISO;
-                elements.dateTo.value = todayISO;
+                // Al entrar en historial, cargar TODAS las ventas por defecto (sin filtros)
+                fetchHistory();
+                elements.dateFrom.value = '';
+                elements.dateTo.value = '';
 
             } else if (targetPageId === 'order-page') {
                 renderOrderManagement();
@@ -788,14 +831,14 @@
         });
     });
 
-    // Eventos de Órdenes (Mismos que antes)
+    // Eventos de Órdenes
     elements.newOrderBtn.addEventListener('click', createNewOrder);
     elements.orderSelector.addEventListener('change', (e) => { setActiveOrder(e.target.value); });
     elements.checkoutBtn.addEventListener('click', checkoutOrder);
     elements.cancelBtn.addEventListener('click', async () => {
         if (!activeOrderId) return;
         let order = await getOrder(activeOrderId);
-        if (confirm(`¿Estás seguro de CANCELAR y ELIMINAR la orden "${order.name}"?`)) {
+        if (confirm(`¿Estás seguro de CANCELAR y ELIMINAR la orden "${order.name}"? Esta acción no se puede deshacer.`)) {
             await deleteOrder(activeOrderId);
             activeOrderId = null;
             await renderOrderManagement();
@@ -803,7 +846,7 @@
         }
     });
 
-    // Eventos de Administración (Mismos que antes)
+    // Eventos de Administración
     elements.productForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = elements.productId.value;
@@ -834,7 +877,7 @@
         showStatus('✅ Todos los datos locales han sido ELIMINADOS y reiniciados.', 5000);
     });
     
-    // --- EVENTOS DE FILTRO DE HISTORIAL (NUEVOS) ---
+    // --- EVENTOS DE FILTRO DE HISTORIAL ---
 
     elements.filterTodayBtn.addEventListener('click', () => {
         const today = new Date();
@@ -847,6 +890,12 @@
     elements.filterHistoryBtn.addEventListener('click', () => {
         const dateFromValue = elements.dateFrom.value;
         const dateToValue = elements.dateTo.value;
+        
+        // Si no hay fechas, se usa la función sin parámetros, lo que trae todo.
+        if (!dateFromValue && !dateToValue) {
+            fetchHistory(); 
+            return;
+        }
 
         if (!dateFromValue || !dateToValue) {
             showStatus('Debes seleccionar ambas fechas para filtrar por rango.', 3000);
