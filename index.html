@@ -272,14 +272,14 @@ display: flex; justify-content: space-around;
             <button id="cancel-btn" class="action-button cancel-button" style="display: none;">❌ CANCELAR ORDEN</button>
         </div>
 
-        <div id="history-page" class="page">
+<div id="history-page" class="page">
             <h2>📜 Historial de Ventas</h2>
 
             <div id="history-filters">
-                <button id="filter-today-btn">📆 Filtrar por **HOY**</button>
-                <div class="date-inputs">
-                    <input type="date" id="date-from" title="Desde">
-                    <input type="date" id="date-to" title="Hasta">
+                <button id="filter-today-btn" class="add-order-button" style="width: 100%; margin-bottom: 10px;">📆 Filtrar por **HOY**</button>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="date" id="date-from" title="Desde" style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: var(--color-tertiary); color: var(--color-text-light);">
+                    <input type="date" id="date-to" title="Hasta" style="flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #555; background-color: var(--color-tertiary); color: var(--color-text-light);">
                 </div>
                 <button id="filter-history-btn" class="add-order-button" style="width: 100%;">🔍 Aplicar Rango de Fechas</button>
             </div>
