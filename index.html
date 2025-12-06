@@ -779,7 +779,7 @@ display: flex; justify-content: space-around;
         if (order && activeOrderId) {
             const { total } = calculateTotal(order);
             elements.activeOrderDisplay.classList.remove('inactive');
-            elements.orderNameDisplay.innerHTML = `Orden Activa: <strong>${order.name}</strong>`;
+            elements.orderNameDisplay.innerHTML = `No: <strong>${order.name}</strong>`;
             elements.orderTotalDisplay.textContent = formatCurrency(total);
         } else {
             elements.activeOrderDisplay.classList.add('inactive');
