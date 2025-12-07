@@ -808,7 +808,7 @@ registerServiceWorker();
         if (order && activeOrderId) {
             const { total } = calculateTotal(order);
             elements.activeOrderDisplay.classList.remove('inactive');
-            elements.orderNameDisplay.innerHTML = `No: <strong>${order.name}</strong>`;
+            elements.orderNameDisplay.innerHTML = `Orden: <strong>${order.name}</strong>`;
             elements.orderTotalDisplay.textContent = formatCurrency(total);
         } else {
             elements.activeOrderDisplay.classList.add('inactive');
@@ -858,79 +858,173 @@ registerServiceWorker();
         }
     }
 
-    async function fetchHistory(startDateTimestamp = null, endDateTimestamp = null) {
-        elements.loadingHistory.style.display = 'block';
-        elements.historyList.innerHTML = '';
-        showLoading(true);
-        
-        try {
-            await openDB();
-            let history = [];
+async function fetchHistory(startDateTimestamp = null, endDateTimestamp = null) {
+    elements.loadingHistory.style.display = 'block';
+    elements.historyList.innerHTML = '';
+    showLoading(true);
 
-            await transaction(STORE_SALES, 'readonly', (store, resolve) => {
-                const request = store.openCursor(null, 'prev'); 
-                request.onsuccess = (event) => {
-                    const cursor = event.target.result;
-                    if (cursor) {
-                        const sale = cursor.value;
-                        const saleTimestamp = sale.timestamp;
-                        
-                        let include = true;
-                        
-                        if (startDateTimestamp && saleTimestamp < startDateTimestamp) {
-                            include = false;
-                        }
+    try {
+        await openDB();
+        let history = [];
+        let totalSales = 0; // Inicializar acumulador de ventas
 
-                        if (endDateTimestamp && saleTimestamp > endDateTimestamp) {
-                            include = false;
-                        }
-
-                        if (include) {
-                            history.push(sale);
-                        }
-                        cursor.continue();
-                    } else {
-                        resolve();
+        await transaction(STORE_SALES, 'readonly', (store, resolve) => {
+            // Usamos un cursor inverso ('prev') para mostrar las ventas más recientes primero
+            const request = store.openCursor(null, 'prev'); 
+            request.onsuccess = (event) => {
+                const cursor = event.target.result;
+                if (cursor) {
+                    const sale = cursor.value;
+                    const saleTimestamp = sale.timestamp;
+                    
+                    let include = true;
+                    
+                    if (startDateTimestamp && saleTimestamp < startDateTimestamp) {
+                        include = false;
                     }
-                };
-            });
 
-            elements.loadingHistory.style.display = 'none';
-            
-            if (history.length === 0) {
-                 elements.historyList.innerHTML = '<p>No se encontraron ventas para este rango de fechas.</p>';
-                 return;
-            }
+                    if (endDateTimestamp && saleTimestamp > endDateTimestamp) {
+                        include = false;
+                    }
 
-            history.forEach(sale => {
-                const item = document.createElement('li');
-                item.className = 'history-item';
-                const name = sale.orderName ? sale.orderName : `Venta #${sale.id}`;
-                const saleDate = new Date(sale.timestamp);
-                
-                const timeStr = saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const dateStr = saleDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+                    if (include) {
+                        history.push(sale);
+                        totalSales += parseFloat(sale.total); // ACUMULAR TOTAL
+                    }
+                    cursor.continue();
+                } else {
+                    resolve();
+                }
+            };
+        });
 
-                item.innerHTML = `
-                    <div class="history-item-details">
-                        <strong>${name}</strong>
-                        <div class="history-item-date">
-                            <span>&#128339;</span> ${dateStr} - ${timeStr}
-                        </div>
-                    </div>
-                    <div class="history-item-total">${formatCurrency(sale.total)}</div>
-                `;
-                elements.historyList.appendChild(item);
-            });
-        } catch (error) {
-            console.error('Fetch History Error:', error);
-            elements.loadingHistory.textContent = '❌ Error al cargar historial desde el almacenamiento local.';
-            showStatus('Error de conexión con el historial local.', 5000);
-        } finally {
-            showLoading(false);
+        elements.loadingHistory.style.display = 'none';
+        
+        if (history.length === 0) {
+             elements.historyList.innerHTML = '<p>No se encontraron ventas para este rango de fechas.</p>';
+             return;
         }
+
+        // 1. Mostrar la lista de ventas
+        history.forEach(sale => {
+            const item = document.createElement('li');
+            item.className = 'history-item';
+            const name = sale.orderName ? sale.orderName : `Venta #${sale.id.toString().slice(-4)}`;
+            const saleDate = new Date(sale.timestamp);
+            
+            const timeStr = saleDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = saleDate.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+
+            item.innerHTML = `
+                <div class="history-item-details">
+                    <strong>${name}</strong>
+                    <div class="history-item-date">
+                        <span>&#128339;</span> ${dateStr} - ${timeStr}
+                    </div>
+                </div>
+                <div class="history-item-total">${formatCurrency(sale.total)}</div>
+            `;
+            elements.historyList.appendChild(item);
+        });
+
+        // 2. Agregar el resumen y el botón de WhatsApp
+        const summaryContainer = document.createElement('div');
+        summaryContainer.style.cssText = 'padding: 10px 0; margin-top: 20px;';
+        
+        // Contenedor de Total
+        const totalDisplay = document.createElement('div');
+        totalDisplay.id = 'sales-grand-total';
+        totalDisplay.style.cssText = `
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: var(--color-success);
+            color: var(--color-text-light);
+            font-size: 1.6em;
+            font-weight: bold;
+            text-align: center;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        `;
+        totalDisplay.innerHTML = `TOTAL NETO: ${formatCurrency(totalSales)}`;
+        summaryContainer.appendChild(totalDisplay);
+
+        // Botón de WhatsApp
+        const whatsappBtn = document.createElement('button');
+        whatsappBtn.className = 'action-button checkout-button'; // Reutilizar clase visual
+        whatsappBtn.style.cssText = 'background-color: #25D366; font-size: 1.1em; padding: 12px;';
+        whatsappBtn.innerHTML = '📲 ENVIAR REPORTE POR WHATSAPP';
+        // Pasar el total de ventas a la función
+        whatsappBtn.onclick = () => shareHistoryWhatsapp(totalSales, history.length, startDateTimestamp, endDateTimestamp);
+        
+        summaryContainer.appendChild(whatsappBtn);
+        elements.historyList.appendChild(summaryContainer);
+
+    } catch (error) {
+        console.error('Fetch History Error:', error);
+        elements.loadingHistory.textContent = '❌ Error al cargar historial desde el almacenamiento local.';
+        showStatus('Error de conexión con el historial local.', 5000);
+    } finally {
+        showLoading(false);
+    }
+}
+  /**
+ * Genera el resumen y abre la URL de WhatsApp.
+ * @param {number} totalAmount - Total de ventas.
+ * @param {number} totalCount - Cantidad de ventas.
+ * @param {number} startTs - Timestamp de inicio de filtro.
+ * @param {number} endTs - Timestamp de fin de filtro.
+ */
+function shareHistoryWhatsapp(totalAmount, totalCount, startTs, endTs) {
+    
+    // Solicitar el número de teléfono con el prefijo de Guatemala
+    let phoneNumber = prompt("Ingresa el número de teléfono para enviar el reporte (ej: 40051234):", "+502");
+
+    if (!phoneNumber || phoneNumber.length < 9) {
+        showStatus('Envío de reporte cancelado o número inválido.', 2500);
+        return;
+    }
+
+    // Asegurar que el número de teléfono comience con +502 si no lo tiene
+    if (!phoneNumber.startsWith('+502')) {
+         phoneNumber = '+502' + phoneNumber.replace(/\D/g, '').slice(-8); // Limpiar y tomar los últimos 8 dígitos
     }
     
+    // Formato de fechas
+    let dateRange = "Ventas Totales del Historial Completo";
+    if (startTs && endTs) {
+        const start = new Date(startTs).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        const end = new Date(endTs).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        
+        if (startTs === startOfDay(new Date()).getTime() && endTs === endOfDay(new Date()).getTime()) {
+             dateRange = "Reporte de Ventas de HOY";
+        } else {
+             dateRange = `Reporte de Ventas del ${start} al ${end}`;
+        }
+    } else if (startTs) {
+         const start = new Date(startTs).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+         dateRange = `Ventas a partir del ${start}`;
+    }
+
+          // Generar el mensaje de WhatsApp
+          const message = `
+      *✅ ${dateRange}*
+      ---
+      *💰 Total Generado:* ${formatCurrency(totalAmount)}
+      *🔢 Cantidad de Órdenes:* ${totalCount}
+      ---
+      
+          `.trim();
+
+          // Codificar el mensaje para la URL
+          const encodedMessage = encodeURIComponent(message);
+          
+          // Crear la URL de WhatsApp
+          const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+          
+          // Abrir la ventana de WhatsApp
+          window.open(whatsappUrl, '_blank');
+      }
+
     // --- LÓGICA DE BACKUP (EXPORTAR / IMPORTAR) ---
 
     async function exportData() {
@@ -1150,7 +1244,7 @@ registerServiceWorker();
             // LÓGICA DE REGISTRO DE SERVICE WORKER (PWA)
             // (¡SE HA ELIMINADO window.addEventListener('load', ...)!)
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/pos-restaurante/sw.js')
+                navigator.serviceWorker.register('/sw.js')
                     .then(reg => console.log('Service Worker Registrado con éxito:', reg.scope))
                     .catch(err => console.error('Fallo el registro de Service Worker:', err));
             } else {
