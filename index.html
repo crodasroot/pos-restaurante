@@ -1150,7 +1150,7 @@ registerServiceWorker();
             // LÓGICA DE REGISTRO DE SERVICE WORKER (PWA)
             // (¡SE HA ELIMINADO window.addEventListener('load', ...)!)
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/pos-restaurante/sw.js')
                     .then(reg => console.log('Service Worker Registrado con éxito:', reg.scope))
                     .catch(err => console.error('Fallo el registro de Service Worker:', err));
             } else {
