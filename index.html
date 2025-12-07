@@ -55,7 +55,7 @@ display: flex; justify-content: space-around;
             border-top: 1px solid #333; 
             box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5);
             /* Cambios clave para fijar */
-            position: fixed; 
+           
             bottom: 0; 
             left: 0;
             width: 100%; /* Asegura que cubra todo el ancho */
@@ -362,7 +362,7 @@ function registerServiceWorker() {
             navigator.serviceWorker.register('/pos-restaurante/sw.js') 
                 .then(registration => {
                     console.log('ServiceWorker registrado con éxito:', registration.scope);
-                    showStatus('PWA lista. Se puede instalar o usar sin conexión.', 4000);
+                    //showStatus('PWA lista. Se puede instalar o usar sin conexión.', 4000);
                 })
                 .catch(error => {
                     // Si falla, es por un error de sintaxis en el sw.js
@@ -628,7 +628,7 @@ registerServiceWorker();
 
     async function createNewOrder() {
         const newOrderId = 'ORDER_' + Date.now();
-        let orderName = prompt("Ingresa el nombre de la nueva orden (Ej: Mesa 5, Cliente A):", `Orden ${newOrderId.slice(-4)}`);
+        let orderName = prompt("Ingresa el nombre de la nueva orden (Ej: Mesa 5, Cliente A):", `No. ${newOrderId.slice(-4)}: `);
         
         if (!orderName) {
             showStatus('Creación de orden cancelada.', 1500);
@@ -1150,7 +1150,7 @@ registerServiceWorker();
             // LÓGICA DE REGISTRO DE SERVICE WORKER (PWA)
             // (¡SE HA ELIMINADO window.addEventListener('load', ...)!)
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/pos-restaurante/sw.js')
+                navigator.serviceWorker.register('/sw.js')
                     .then(reg => console.log('Service Worker Registrado con éxito:', reg.scope))
                     .catch(err => console.error('Fallo el registro de Service Worker:', err));
             } else {
