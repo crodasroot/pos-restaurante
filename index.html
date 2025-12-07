@@ -48,27 +48,68 @@
             padding: var(--mobile-padding);
         }
 
+
+        @media (min-width: 768px) {
+        #nav-bar {
+            /* Restablecer o anular los estilos de posición horizontal de móvil */
+            display: flex; /* Mantener flex, pero cambiar dirección */
+            flex-direction: column; /* La clave para que sea vertical */
+            justify-content: flex-start; /* Alinear arriba en la columna */
+            align-items: center; /* Centrar ítems horizontalmente en el contenedor vertical */
+            
+            /* Posicionar y dimensionar para barra lateral izquierda */
+            position: fixed;
+            top: 0; /* Fijar arriba */
+            bottom: 0; /* Fijar abajo, para que cubra la altura */
+            left: 0; /* Fijar a la izquierda */
+            width: auto; /* Ancho ajustado al contenido */
+            height: 100vh; /* Altura completa de la ventana */
+            max-width: 100px; /* Establecer un ancho máximo (ej: 100px) */
+
+            /* Actualizar bordes y sombras para la nueva posición */
+            border-top: none; /* Eliminar el borde superior de móvil */
+            border-right: 1px solid #333; /* Agregar un borde derecho */
+            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5); /* Sombra lateral */
+             padding: 100px;
+        }
+
+        /* Puedes agregar estilos adicionales para los botones dentro de la barra */
+        .tab-button {
+            width: 100%; /* Para que los botones se extiendan en el ancho del contenedor */
+            margin-bottom: 10px; /* Espacio entre los botones verticales */
+            padding: 15px 5px; /* Ajustar padding vertical y horizontal */
+          
+            
+        }
+}
+ @media (max-width: 768px) {
         /* --- PESTAÑAS Y NAVEGACIÓN --- */
         #nav-bar {
-display: flex; justify-content: space-around; 
+            display: flex; 
+            justify-content: space-around; 
             background-color: var(--color-secondary);
             border-top: 1px solid #333; 
             box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.5);
-            /* Cambios clave para fijar */
             position: fixed;
             bottom: 0; 
             left: 0;
-            width: 100%; /* Asegura que cubra todo el ancho */
-            max-width: 600px; /* Limita al ancho del contenedor principal */
-            margin: 0 auto; /* Centrar en el ancho máximo */
+            width: 100%; 
+            max-width: 600px; /* Esto podría limitar la barra horizontal en móviles grandes */
+            margin: 0 auto; 
+           
             z-index: 100;
+           
         }
-        .tab-button {
+      
+
+}
+  .tab-button {
            flex: 1; padding: 10px 0; text-align: center; border: none;
             background-color: transparent; color: #888; cursor: pointer;
             transition: all 0.2s ease-in-out; font-size: 14px;
             display: flex; flex-direction: column; align-items: center;
         }
+        
         .tab-button.active { color: var(--color-accent); }
         .tab-button span { font-size: 20px; margin-bottom: 3px; }
 
