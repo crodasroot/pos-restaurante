@@ -3,7 +3,7 @@ const FILES_TO_CACHE = [
   '/', 
   '/index.html',
   '/manifest.json',
-  '/sw.js',
+  '/pos-restaurante/sw.js',
   '/pos-restaurante/icon-192.png',
   '/pos-restaurante/icon-512.png',
   // Add other assets like CSS, JS, images as needed
